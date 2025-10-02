@@ -201,7 +201,8 @@ async function authenticateUser(username, password) {
         }
 
         console.log('✅ Usuario autenticado exitosamente');
-        
+        console.log('DEBUG - Estructura de data:', data); 
+        console.log('DEBUG - Estructura de data.user:', data.user);
         // El endpoint ya devuelve todos los datos necesarios
         return data.user;
 
@@ -216,10 +217,23 @@ async function authenticateUser(username, password) {
 // ===================================
 
 async function saveUserSession(user) {
-    // Solo guardar en sessionStorage para la sesión actual
-    sessionStorage.setItem('currentUser', JSON.stringify(user));
+    // Asegurarse que user tiene todos los campos necesarios
+    const userData = {
+        id: user.id,
+        username: user.username,
+        nombre: user.nombre,
+        email: user.email || user.username,
+        departamento: user.departamento,
+        rol: user.rol,
+        rol_id: user.rol_id,
+        token_disponible: user.token_disponible || 0,
+        token_papeleria_ordinario: user.token_papeleria_ordinario || 0,
+        token_papeleria_extraordinario: user.token_papeleria_extraordinario || 0
+    };
     
-    console.log('💾 Sesión guardada:', { username: user.username });
+    sessionStorage.setItem('currentUser', JSON.stringify(userData));
+    
+    console.log('💾 Sesión guardada completa:', userData);
 }
 
 function redirectToApp(user) {
