@@ -48,14 +48,23 @@ try {
  * Manejar login
  */
 function handleLogin($conn, $data) {
+    error_log("=== DEBUG LOGIN INICIO ===");
+    error_log("Data recibida: " . json_encode($data));
+    
     $username = $data['username'] ?? '';
     $password = $data['password'] ?? '';
+    
+    error_log("Username: " . $username);
+    error_log("Password recibido: " . ($password ? 'SÍ' : 'NO'));
     
     // Validar campos requeridos
     $missing = validateRequired($data, ['username', 'password']);
     if (!empty($missing)) {
+        error_log("Campos faltantes: " . json_encode($missing));
         sendResponse(false, null, 'Campos requeridos: ' . implode(', ', $missing), 400);
     }
+    
+    error_log("Antes de buscar usuario en BD");
     
     // Buscar usuario
     $stmt = $conn->prepare("
@@ -68,9 +77,14 @@ function handleLogin($conn, $data) {
     $stmt->execute(['username' => $username]);
     $user = $stmt->fetch();
     
+    error_log("Usuario encontrado: " . ($user ? 'SÍ' : 'NO'));
+    
     if (!$user) {
+        error_log("Usuario no encontrado o inactivo");
         sendResponse(false, null, 'Usuario no encontrado o inactivo', 401);
     }
+    
+    // ... resto del código
     
     // Verificar contraseña (compatibilidad con passwords sin hash)
     if (!verifyPassword($password, $user['password_hash'])) {
@@ -90,7 +104,6 @@ function handleLogin($conn, $data) {
         'id' => $user['id'],
         'username' => $user['username'],
         'nombre' => $user['nombre'],
-        'email' => $user['email'],
         'rol' => $user['rol_nombre'],
         'rol_id' => $user['rol_id'],
         'departamento' => $user['departamento'],
