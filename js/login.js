@@ -188,64 +188,30 @@ async function authenticateUser(username, password) {
     try {
         console.log('🔍 Intentando autenticar usuario:', username);
 
-        // QUERY SIMPLIFICADA - Solo tabla usuarios
-        const { data: usuario, error: userError } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('username', username)
-            .eq('activo', true)
-            .single();
+        // Usar el endpoint de autenticación PHP
+        const { data, error } = await supabase.auth.signIn({
+            email: username,  // El adapter acepta email pero usamos username
+            password: password
+        });
 
-        if (userError) {
-            console.error('Error buscando usuario:', userError);
+        if (error) {
+            console.error('Error de autenticación:', error);
             return null;
         }
 
-        if (!usuario) {
-            console.log('❌ Usuario no encontrado');
+        if (!data || !data.user) {
+            console.log('❌ Credenciales incorrectas');
             return null;
         }
-
-        // Verificar contraseña (comparación directa para desarrollo)
-        if (usuario.password_hash !== password) {
-            console.log('❌ Contraseña incorrecta');
-            return null;
-        }
-
-        // QUERY SEPARADA - Buscar rol
-        const { data: rol, error: rolError } = await supabase
-            .from('roles')
-            .select('nombre, descripcion, permisos')
-            .eq('id', usuario.rol_id)
-            .single();
-
-        if (rolError) {
-            console.warn('Error cargando rol:', rolError);
-            // Continuar sin rol si hay error
-        }
-
-        // Actualizar última fecha de login
-        await supabase
-            .from('usuarios')
-            .update({ fecha_ultimo_login: new Date().toISOString() })
-            .eq('id', usuario.id);
 
         console.log('✅ Usuario autenticado exitosamente');
-
-        return {
-            id: usuario.id,
-            username: usuario.username,
-            nombre: usuario.nombre,
-            departamento: usuario.departamento,
-            rol_id: usuario.rol_id,
-            rol: rol?.nombre || 'usuario',
-            permisos: rol?.permisos || {},
-            token_disponible: usuario.token_disponible
-        };
+        
+        // El endpoint ya devuelve todos los datos necesarios
+        return data.user;
 
     } catch (error) {
         console.error('Error en authenticateUser:', error);
-        throw error;
+        return null;
     }
 }
 
