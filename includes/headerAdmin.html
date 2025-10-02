@@ -1,0 +1,42 @@
+<!-- Header Admin Simple -->
+<header class="header">
+    <div class="container">
+        <div class="header-content">
+            
+            <!-- Logo -->
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>Panel de Administración</h1>
+                </div>
+            </div>
+
+            <!-- Navegación -->
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="admin.html" class="nav-link">Panel</a></li>
+                    <li><a href="inventario.html" class="nav-link" id="inventarioLink">Inventario</a></li>
+                </ul>
+            </nav>
+
+            <!-- Usuario -->
+            <div class="user-section">
+                <div class="user-menu">
+                    <button class="user-button" onclick="toggleUserMenu()">
+                        <span class="user-name" id="userName">Admin</span>
+                    </button>
+                    
+                    <div class="user-dropdown" id="userDropdown" style="display: none;">
+                        <a href="index.html">Vista Usuario</a>
+                        <a href="#" onclick="logout()">Cerrar Sesión</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</header>
