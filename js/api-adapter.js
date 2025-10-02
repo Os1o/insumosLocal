@@ -4,8 +4,8 @@
  */
 
 const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:8080/insumos/api/endpoints'
-    : 'http://11.254.27.18:8080/insumos/api/endpoints';
+    ? 'http://localhost/insumos/api/endpoints'
+    : 'http://11.254.27.18/insumos/api/endpoints';
 
 /**
  * Función auxiliar para hacer fetch con manejo de errores
