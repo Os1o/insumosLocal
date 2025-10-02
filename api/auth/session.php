@@ -22,7 +22,6 @@ class SessionManager {
         $_SESSION['user_id'] = $userData['id'];
         $_SESSION['username'] = $userData['username'];
         $_SESSION['nombre'] = $userData['nombre'];
-        $_SESSION['email'] = $userData['email'];
         $_SESSION['rol'] = $userData['rol'];
         $_SESSION['rol_id'] = $userData['rol_id'];
         $_SESSION['departamento'] = $userData['departamento'];
@@ -84,7 +83,6 @@ class SessionManager {
             'id' => $_SESSION['user_id'],
             'username' => $_SESSION['username'],
             'nombre' => $_SESSION['nombre'],
-            'email' => $_SESSION['email'],
             'rol' => $_SESSION['rol'],
             'rol_id' => $_SESSION['rol_id'],
             'departamento' => $_SESSION['departamento'],
