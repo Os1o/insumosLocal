@@ -1,0 +1,49 @@
+# Archivos de configuración sensibles
+api/config/database.php
+.env
+.env.local
+.env.production
+
+# Variables de entorno
+config.local.js
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+error_log
+npm-debug.log*
+
+# Carpetas de dependencias
+node_modules/
+vendor/
+
+# Archivos temporales
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Backups
+*.bak
+*.backup
+backup/
+
+# Archivos de IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de Windows
+$RECYCLE.BIN/
+*.lnk
+
+# Archivos de desarrollo
+test.php
+debug.php
+prueba.html
