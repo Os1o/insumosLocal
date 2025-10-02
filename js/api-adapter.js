@@ -46,40 +46,28 @@ const API = {
      * Sistema de autenticación
      */
     auth: {
-        /**
-         * Login (reemplaza supabase.auth.signIn)
-         */
         signIn: async ({ email, password }) => {
             return await apiFetch('auth.php', {
                 body: {
                     action: 'login',
-                    username: email, // En el sistema local usamos username
+                    username: email,
                     password: password
                 }
             });
         },
 
-        /**
-         * Logout (reemplaza supabase.auth.signOut)
-         */
         signOut: async () => {
             return await apiFetch('auth.php', {
                 body: { action: 'logout' }
             });
         },
 
-        /**
-         * Verificar sesión activa
-         */
         checkSession: async () => {
             return await apiFetch('auth.php', {
                 body: { action: 'check-session' }
             });
         },
 
-        /**
-         * Obtener perfil del usuario
-         */
         getProfile: async () => {
             return await apiFetch('auth.php', {
                 body: { action: 'get-profile' }
@@ -88,31 +76,146 @@ const API = {
     },
 
     /**
-     * Operaciones de base de datos (placeholder)
-     * Se implementarán según se vayan necesitando
+     * Operaciones de base de datos
      */
     from: (table) => {
         return {
-            select: async (columns = '*') => {
-                // Se implementará cuando creemos endpoints específicos
-                console.warn(`API.from('${table}').select() aún no implementado`);
-                return { data: null, error: { message: 'No implementado' } };
+            select: (columns = '*') => {
+                return new TableQuery(table, 'select', columns);
             },
-            insert: async (data) => {
-                console.warn(`API.from('${table}').insert() aún no implementado`);
-                return { data: null, error: { message: 'No implementado' } };
+            insert: (data) => {
+                return new TableQuery(table, 'insert', data);
             },
-            update: async (data) => {
-                console.warn(`API.from('${table}').update() aún no implementado`);
-                return { data: null, error: { message: 'No implementado' } };
+            update: (data) => {
+                return new TableQuery(table, 'update', data);
             },
-            delete: async () => {
-                console.warn(`API.from('${table}').delete() aún no implementado`);
-                return { data: null, error: { message: 'No implementado' } };
+            delete: () => {
+                return new TableQuery(table, 'delete');
             }
         };
     }
 };
+
+/**
+ * Clase para construir queries tipo Supabase
+ */
+class TableQuery {
+    constructor(table, action, data = null) {
+        this.table = table;
+        this.action = action;
+        this.data = data;
+        this.filters = {};
+        this.orderBy = null;
+        this.limitValue = null;
+        this.singleValue = false;
+    }
+
+    eq(field, value) {
+        this.filters[field] = { op: 'eq', value };
+        return this;
+    }
+
+    neq(field, value) {
+        this.filters[field] = { op: 'neq', value };
+        return this;
+    }
+
+    order(field, options = {}) {
+        this.orderBy = {
+            field,
+            ascending: options.ascending !== false
+        };
+        return this;
+    }
+
+    limit(count) {
+        this.limitValue = count;
+        return this;
+    }
+
+    single() {
+        this.singleValue = true;
+        return this;
+    }
+
+    async then(resolve, reject) {
+        try {
+            const result = await this.execute();
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        }
+    }
+
+    async execute() {
+        // Determinar endpoint según la tabla
+        let endpoint = '';
+        let actionName = '';
+
+        switch(this.table) {
+            case 'categorias_insumos':
+                endpoint = 'recursos.php';
+                actionName = 'get-categorias-insumos';
+                break;
+
+            case 'insumos':
+                endpoint = 'recursos.php';
+                actionName = 'get-insumos';
+                break;
+
+            case 'categorias_papeleria':
+                endpoint = 'recursos.php';
+                actionName = 'get-categorias-papeleria';
+                break;
+
+            case 'papeleria':
+                endpoint = 'recursos.php';
+                actionName = 'get-papeleria';
+                break;
+
+            case 'usuarios':
+                endpoint = 'usuarios.php';
+                actionName = this.action === 'select' ? 'get' : this.action;
+                break;
+
+            case 'solicitudes':
+                endpoint = 'solicitudes.php';
+                actionName = this.action;
+                break;
+
+            case 'solicitud_detalles':
+                endpoint = 'solicitudes.php';
+                actionName = 'insert-detalles';
+                break;
+
+            case 'solicitudes_recibidos':
+                endpoint = 'solicitudes.php';
+                actionName = 'get-recibidos';
+                break;
+
+            case 'tokens_renovacion':
+                endpoint = 'solicitudes.php';
+                actionName = 'insert-token-renovacion';
+                break;
+
+            default:
+                console.warn(`Tabla ${this.table} no tiene endpoint específico`);
+                return { data: null, error: { message: 'Tabla no soportada' } };
+        }
+
+        // Preparar body de la petición
+        const body = {
+            action: actionName,
+            filters: this.filters,
+            order: this.orderBy,
+            limit: this.limitValue,
+            single: this.singleValue,
+            data: this.data
+        };
+
+        return await apiFetch(endpoint, { body });
+    }
+}
 
 // Hacer disponible globalmente
 window.API = API;
