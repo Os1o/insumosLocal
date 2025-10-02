@@ -161,12 +161,8 @@ async function handleLogin(e) {
             }, 2000);
 
         } else {
-            // Credenciales inválidas - mensaje más específico
-            if (error && error.code === 'PGRST116') {
-                showErrorMessage('Usuario no encontrado en el sistema');
-            } else {
-                showErrorMessage('Usuario o contraseña incorrectos');
-            }
+            // Credenciales inválidas
+            showErrorMessage('Usuario o contraseña incorrectos');
             shakeCard();
         }
 

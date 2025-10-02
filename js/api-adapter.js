@@ -3,9 +3,7 @@
  * Conecta el frontend con el backend PHP local
  */
 
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost/insumos/api/endpoints'
-    : 'http://11.254.27.18/insumos/api/endpoints';
+const API_BASE_URL = 'http://11.254.27.18/insumos/api/endpoints';
 
 /**
  * Función auxiliar para hacer fetch con manejo de errores
