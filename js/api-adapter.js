@@ -3,8 +3,10 @@
  * Conecta el frontend con el backend PHP local
  */
 
-const API_BASE_URL = window.location.origin + '/insumos/api/endpoints';
-
+const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8080/insumos/api/endpoints'
+    : 'http://160.185.155.10:8080/insumos/api/endpoints';
+    
 /**
  * Función auxiliar para hacer fetch con manejo de errores
  */
