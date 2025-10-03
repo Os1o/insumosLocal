@@ -8,15 +8,6 @@
     <link rel="stylesheet" href="css/styles.css">
     <meta name="description"
         content="Sistema de solicitudes de insumos y papelería para necesidades ordinarias y eventos especiales">
-    <script>
-        (function () {
-            const session = sessionStorage.getItem('currentUser');
-            if (!session) {
-                window.location.replace('/login.html');
-                return;
-            }
-        })();
-    </script>
 </head>
 
 <body>
@@ -353,6 +344,15 @@
     <!-- DESPUÉS -->
     <script src="js/api-adapter.js"></script>
     <script src="js/script.js"></script>
+    <script>
+        (function () {
+            const session = sessionStorage.getItem('currentUser');
+            if (!session) {
+                window.location.replace('/login.html');
+                return;
+            }
+        })();
+    </script>
 
     <!-- JavaScript básico para cambiar entre secciones -->
 </body>
