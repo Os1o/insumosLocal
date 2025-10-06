@@ -92,13 +92,12 @@ C:\xampp\htdocs\insumos\
 
 ## Configuración de Red
 
-### Acceso desde la red local (160.185.155.10)
+### Acceso desde la red local (11.254.27.18)
 
 1. **Configurar Apache** (`C:\xampp\apache\conf\httpd.conf`):
 
 ```apache
-ServerName 160.185.155.10:8080
-Listen 8080
+ServerName 11.254.27.18
 
 <Directory "C:/xampp/htdocs/insumos">
     Options Indexes FollowSymLinks
@@ -119,8 +118,8 @@ netsh advfirewall firewall add rule name="PostgreSQL" dir=in action=allow protoc
 ## URLs de Acceso
 
 - **Local**: http://localhost:8080/insumos/
-- **Red**: http://160.185.155.10:8080/insumos/
-- **API Test**: http://160.185.155.10:8080/insumos/api/test-connection.php
+- **Red**: http://11.254.27.18/insumos/
+- **API Test**: http://11.254.27.18/insumos/api/test-connection.php
 
 ## Usuarios de Prueba
 

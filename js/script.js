@@ -6,6 +6,14 @@
 // ===================================
 // CONFIGURACIÓN GLOBAL
 // ===================================
+/* ===================================
+   SISTEMA SOLICITUDES DE INSUMOS - SCRIPT.JS
+   Sistema de gestión de solicitudes
+   =================================== */
+
+// ===================================
+// CONFIGURACIÓN GLOBAL
+// ===================================
 const APP_CONFIG = {
     name: 'Sistema de Solicitudes de Insumos',
     version: '1.0.0',
@@ -31,9 +39,30 @@ let categorias = [];
 let insumos = [];
 let carritoItems = [];
 
-
-// Configuración Supabase
+// Configuración - USA TU API ADAPTER LOCAL
 const supabase = window.API;
+
+if (!supabase) {
+    console.error('❌ API adapter no encontrado. Verifica que api-adapter.js se cargue antes que script.js');
+    
+    // Fallback: crear un objeto básico para evitar errores
+    window.API = {
+        auth: {
+            signIn: () => ({ data: null, error: { message: 'API no disponible' } }),
+            signOut: () => ({ data: null, error: { message: 'API no disponible' } }),
+            getProfile: () => ({ data: null, error: { message: 'API no disponible' } })
+        },
+        from: () => ({
+            select: () => ({ 
+                eq: () => ({ 
+                    single: () => Promise.resolve({ data: null, error: { message: 'API no disponible' } }) 
+                }) 
+            })
+        })
+    };
+    
+    const supabase = window.API;
+}
 
 // Función para verificar token disponible
 function verificarTokenDisponible() {
@@ -1335,6 +1364,10 @@ function updateDynamicInfo() {
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ===================================
 
+// ===================================
+// INICIALIZACIÓN DE LA APLICACIÓN
+// ===================================
+
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 ' + APP_CONFIG.name + ' v' + APP_CONFIG.version + ' iniciando...');
     console.log('📍 URL actual:', window.location.href);
@@ -1347,41 +1380,59 @@ document.addEventListener('DOMContentLoaded', async function () {
     console.log('Header container:', headerContainer ? '✅ Encontrado' : '❌ No encontrado');
     console.log('Footer container:', footerContainer ? '✅ Encontrado' : '❌ No encontrado');
 
-    /*if (!headerContainer) {
-        console.error('❌ Header container faltante. Verificar HTML.');
-        return;
-    }*/
-
-    // Footer es opcional
-    if (!footerContainer) {
-        console.log('⚠️ Footer container no encontrado, continuando sin footer...');
-    }
-
     try {
         console.log('🔄 Iniciando carga de componentes...');
 
-        // Cargar componentes del sistema con timeout
-        const headerPromise = loadComponent('header-container', 'includes/header.html');
-        const footerPromise = loadComponent('footer-container', 'includes/foot.html');
+        // Probar conexión con el backend primero
+        console.log('🔌 Probando conexión con backend...');
+        const conexionOk = await probarConexionBackend();
+        
+        if (!conexionOk) {
+            showNotification('No se pudo conectar con el servidor. Algunas funciones pueden no estar disponibles.', 'warning');
+            // Continuar a pesar del error, pero con funcionalidad limitada
+        }
 
-        // Esperar máximo 5 segundos por componente
-        await Promise.race([
-            Promise.all([headerPromise, footerPromise]),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-        ]);
+        // Cargar componentes del sistema
+        const loadPromises = [];
+        
+        if (headerContainer) {
+            loadPromises.push(loadComponent('header-container', 'includes/header.html'));
+        }
+        
+        if (footerContainer) {
+            loadPromises.push(loadComponent('footer-container', 'includes/foot.html'));
+        }
+
+        // Esperar a que carguen los componentes (con timeout de 8 segundos)
+        if (loadPromises.length > 0) {
+            await Promise.race([
+                Promise.all(loadPromises),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout cargando componentes')), 8000))
+            ]);
+        }
 
         console.log('✅ Componentes cargados exitosamente');
 
         // Actualizar información dinámica
         updateDynamicInfo();
 
+        // Cargar y mostrar tokens
+        await cargarTokensPapeleria();
         actualizarVisualizacionTokens();
+
+        // Configurar selector de recursos por defecto
+        if (document.getElementById('btn-insumos')) {
+            seleccionarRecurso('insumo');
+        }
 
         // Configurar eventos principales
         setTimeout(setupAllEventListeners, 300);
 
         // Cargar datos iniciales
         setTimeout(loadInitialData, 500);
+
+        // Actualizar estado del dashboard
+        setTimeout(actualizarEstadoDashboard, 1000);
 
         console.log('✅ Aplicación inicializada correctamente');
 
@@ -1393,12 +1444,19 @@ document.addEventListener('DOMContentLoaded', async function () {
             showNotification('Error al inicializar componentes: ' + error.message, 'warning');
         }
 
-        // Continuar con la inicialización básica
+        // Continuar con la inicialización básica incluso si hay errores
         setTimeout(() => {
             updateDynamicInfo();
-            actualizarVisualizacionTokens();
+            cargarTokensPapeleria().then(() => {
+                actualizarVisualizacionTokens();
+            });
             setupAllEventListeners();
             loadInitialData();
+            
+            // Configurar selector de recursos por defecto (fallback)
+            if (document.getElementById('btn-insumos')) {
+                seleccionarRecurso('insumo');
+            }
         }, 1000);
     }
 });
@@ -2114,31 +2172,23 @@ let tokensPapeleria = {
 };
 
 // Función para cargar tokens de papelería desde la base de datos
+// Función para cargar tokens desde la sesión PHP
 async function cargarTokensPapeleria() {
     try {
         const session = sessionStorage.getItem('currentUser');
         if (!session) return;
 
         const user = JSON.parse(session);
+        
+        // Los tokens ya vienen en la sesión del login
+        // Solo necesitamos actualizar la visualización
+        console.log('Tokens del usuario:', {
+            insumo: user.token_disponible,
+            papeleria_ordinario: user.token_papeleria_ordinario,
+            papeleria_extraordinario: user.token_papeleria_extraordinario
+        });
 
-        // Obtener tokens actualizados del usuario desde la sesión PHP
-        const { data, error } = await supabase.auth.getProfile();
-
-        if (error) {
-            console.error('Error cargando tokens:', error);
-            return;
-        }
-
-        if (data && data.user) {
-            // Actualizar la sesión con los nuevos tokens
-            user.token_disponible = data.user.token_disponible;
-            user.token_papeleria_ordinario = data.user.token_papeleria_ordinario;
-            user.token_papeleria_extraordinario = data.user.token_papeleria_extraordinario;
-            sessionStorage.setItem('currentUser', JSON.stringify(user));
-
-            // Actualizar la interfaz
-            actualizarVisualizacionTokens();
-        }
+        actualizarVisualizacionTokens();
 
     } catch (error) {
         console.error('Error en cargarTokensPapeleria:', error);
@@ -2146,13 +2196,14 @@ async function cargarTokensPapeleria() {
 }
 
 // Función para actualizar la visualización de tokens en la interfaz
+// Función para actualizar la visualización de tokens en la interfaz
 function actualizarVisualizacionTokens() {
     const session = sessionStorage.getItem('currentUser');
     if (!session) return;
 
     const user = JSON.parse(session);
 
-    console.log('DEBUG - Tokens del usuario:', {
+    console.log('Actualizando tokens en UI:', {
         insumo: user.token_disponible,
         papeleria_ordinario: user.token_papeleria_ordinario,
         papeleria_extraordinario: user.token_papeleria_extraordinario
@@ -2161,7 +2212,9 @@ function actualizarVisualizacionTokens() {
     // Actualizar token de insumos
     const tokenInsumoDisplay = document.getElementById('token-insumo-display');
     if (tokenInsumoDisplay) {
+        const tieneToken = user.token_disponible > 0;
         tokenInsumoDisplay.textContent = `Token: ${user.token_disponible || 0}`;
+        tokenInsumoDisplay.style.color = tieneToken ? '#27ae60' : '#e74c3c';
     }
 
     // Actualizar tokens de papelería
@@ -2169,11 +2222,15 @@ function actualizarVisualizacionTokens() {
     const tokenPapeleriaExtraordinario = document.getElementById('token-papeleria-extraordinario-display');
 
     if (tokenPapeleriaOrdinario) {
+        const tieneToken = user.token_papeleria_ordinario > 0;
         tokenPapeleriaOrdinario.textContent = `Ordinario: ${user.token_papeleria_ordinario || 0}`;
+        tokenPapeleriaOrdinario.style.color = tieneToken ? '#27ae60' : '#e74c3c';
     }
 
     if (tokenPapeleriaExtraordinario) {
+        const tieneToken = user.token_papeleria_extraordinario > 0;
         tokenPapeleriaExtraordinario.textContent = `Extraordinario: ${user.token_papeleria_extraordinario || 0}`;
+        tokenPapeleriaExtraordinario.style.color = tieneToken ? '#27ae60' : '#e74c3c';
     }
 
     // Actualizar estado de botones

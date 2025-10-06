@@ -8,15 +8,6 @@
     <link rel="stylesheet" href="css/styles.css">
     <meta name="description"
         content="Sistema de solicitudes de insumos y papelería para necesidades ordinarias y eventos especiales">
-    <script>
-        (function () {
-            const session = sessionStorage.getItem('currentUser');
-            if (!session) {
-                window.location.replace('/login.html');
-                return;
-            }
-        })();
-    </script>
 </head>
 
 <body>
@@ -350,7 +341,9 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Primero tu API adapter -->
+    <script src="js/api-adapter.js"></script>
+    <!-- Luego tu script -->
     <script src="js/script.js"></script>
     <script>
         (function () {
