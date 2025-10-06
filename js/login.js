@@ -6,7 +6,7 @@
 // CONFIGURACIÓN GLOBAL
 // ===================================
 
-const supabase = window.API;
+const supabase = window.API; // Usar API local en lugar de Supabase
 
 // Variables globales
 let isLoading = false;
@@ -82,8 +82,9 @@ function setupFormEvents() {
     });
 }
 
-/*function setupRealtimeValidation() {
-    const usernameInput = document.getElementById('username');
+function setupRealtimeValidation() {
+    return
+    /*const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
 
     // Validación de username
@@ -97,8 +98,8 @@ function setupFormEvents() {
     // Validación de password
     passwordInput.addEventListener('input', function () {
         validatePassword(this.value);
-    });
-}*/
+    });*/
+}
 
 function setupVisualEffects() {
     // Efecto de parallax suave en elementos decorativos
@@ -168,14 +169,14 @@ async function handleLogin(e) {
 
     } catch (error) {
         console.error('❌ Error durante el login:', error);
-        showErrorMessage('Error de conexión. Intenta nuevamente.');
+        // Solo mostrar error de conexión si es un error real de red/servidor
+        showErrorMessage('Error de conexión con el servidor. Intenta nuevamente.');
         shakeCard();
 
     } finally {
         setLoadingState(false);
     }
 }
-
 // ===================================
 // AUTENTICACIÓN CON SUPABASE
 // ===================================
@@ -186,7 +187,7 @@ async function authenticateUser(username, password) {
 
         // Usar el endpoint de autenticación PHP
         const { data, error } = await supabase.auth.signIn({
-            email: username,  // El adapter acepta email pero usamos username
+            email: username,
             password: password
         });
 
@@ -201,7 +202,6 @@ async function authenticateUser(username, password) {
         }
 
         console.log('✅ Usuario autenticado exitosamente');
-        // El endpoint ya devuelve todos los datos necesarios
         return data.user;
 
     } catch (error) {
@@ -215,45 +215,25 @@ async function authenticateUser(username, password) {
 // ===================================
 
 async function saveUserSession(user) {
-    // Asegurarse que user tiene todos los campos necesarios
-    const userData = {
-        id: user.id,
-        username: user.username,
-        nombre: user.nombre,
-        email: user.email || user.username,
-        departamento: user.departamento,
-        rol: user.rol,
-        rol_id: user.rol_id,
-        token_disponible: user.token_disponible || 0,
-        token_papeleria_ordinario: user.token_papeleria_ordinario || 0,
-        token_papeleria_extraordinario: user.token_papeleria_extraordinario || 0
-    };
+    // Solo guardar en sessionStorage para la sesión actual
+    sessionStorage.setItem('currentUser', JSON.stringify(user));
     
-    sessionStorage.setItem('currentUser', JSON.stringify(userData));
-    
-    console.log('💾 Sesión guardada completa:', userData);
+    console.log('💾 Sesión guardada:', { username: user.username });
 }
 
 function redirectToApp(user) {
-    // Determinar página de destino según el rol
-    let targetPage = 'index.html'; // Default para usuarios normales
+    let targetPage = 'dashboard.html'; // CAMBIAR de index.html a dashboard.html
 
     switch (user.rol) {
         case 'super_admin':
-            targetPage = 'admin.html';
-            break;
         case 'admin':
             targetPage = 'admin.html';
             break;
-        case 'usuario':
         default:
-            targetPage = 'index.html';
-            break;
+            targetPage = 'dashboard.html'; // CAMBIAR
     }
 
     console.log(`🚀 Redirigiendo a: ${targetPage} (rol: ${user.rol})`);
-
-    // SOLUCIÓN: Redirigir directamente sin verificar con fetch
     window.location.href = targetPage;
 }
 

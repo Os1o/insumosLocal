@@ -180,7 +180,13 @@ class TableQuery {
 
             case 'solicitudes':
                 endpoint = 'solicitudes.php';
-                actionName = this.action;
+                if (this.action === 'insert') {
+                    actionName = 'insert';
+                    // Extraer el primer objeto del array si viene como [data]
+                    if (Array.isArray(this.data) && this.data.length > 0) {
+                        this.data = this.data[0];
+                    }
+                }
                 break;
 
             case 'solicitud_detalles':
