@@ -379,15 +379,15 @@ function agregarAlCarrito(insumoId) {
     document.getElementById('btnEnviar').disabled = false;
 }*/
 // Actualizar vista del carrito
+// Función para actualizar la vista del carrito (robusta)
 function actualizarVistaCarrito() {
     const container = document.getElementById('carritoItems');
     const count = document.getElementById('carritoCount');
     const btnEnviar = document.getElementById('btnEnviar');
 
-    // Verificar que los elementos existan antes de usarlos
+    // Si los elementos no existen (modal cerrado), salir silenciosamente
     if (!container || !count || !btnEnviar) {
-        console.log('Elementos del carrito no disponibles (modal probablemente cerrado)');
-        return; // Salir silenciosamente si el modal no está abierto
+        return;
     }
 
     if (carritoItems.length === 0) {
@@ -411,7 +411,7 @@ function actualizarVistaCarrito() {
     container.innerHTML = html;
     count.textContent = carritoItems.length;
     btnEnviar.disabled = false;
-}
+}               
 
 
 // Remover del carrito
@@ -420,143 +420,7 @@ function removerDelCarrito(index) {
     actualizarVistaCarrito();
     showNotification('Item removido del carrito', 'info');
 }
-
-
-/*async function enviarSolicitud() {
-    if (carritoItems.length === 0) {
-        showNotification('Agrega al menos un insumo al carrito', 'warning');
-        return;
-    }
-
-    try {
-        const session = sessionStorage.getItem('currentUser');
-        const user = JSON.parse(session);
-
-        // Preparar datos de la solicitud
-        let datosJunta = null;
-
-        // Si es solicitud de juntas, capturar campos específicos
-        if (currentSolicitudType === 'juntas') {
-            const fechaEvento = document.getElementById('fechaEvento').value;
-            const horaEvento = document.getElementById('horaEvento').value;
-            const numParticipantes = document.getElementById('numParticipantes').value;
-            const salaEvento = document.getElementById('salaEvento').value;
-            const descripcionEvento = document.getElementById('descripcionEvento').value;
-
-            // Validar campos requeridos para juntas
-            if (!fechaEvento || !horaEvento || !numParticipantes || !salaEvento) {
-                showNotification('Complete todos los campos obligatorios del evento', 'warning');
-                return;
-            }
-
-            // Validar que la fecha sea futura
-            const fechaEventsDateTime = new Date(`${fechaEvento}T${horaEvento}`);
-            const ahora = new Date();
-            if (fechaEventsDateTime <= ahora) {
-                showNotification('La fecha y hora del evento debe ser futura', 'warning');
-                return;
-            }
-
-            // Preparar objeto JSON para datos_junta
-            datosJunta = {
-                fecha_evento: fechaEvento,
-                hora_evento: horaEvento,
-                num_participantes: parseInt(numParticipantes),
-                sala_ubicacion: salaEvento.trim(),
-                descripcion: descripcionEvento.trim() || null,
-                fecha_captura: new Date().toISOString()
-            };
-        }
-
-        // Crear solicitud principal CON datos_junta
-        const { data: solicitud, error: solError } = await supabase
-            .from('solicitudes')
-            .insert({
-                usuario_id: user.id,
-                tipo: currentSolicitudType,
-                estado: 'pendiente',
-                total_items: carritoItems.length,
-                token_usado: currentSolicitudType === 'ordinaria',
-                datos_junta: datosJunta  // LÍNEA NUEVA
-            })
-            .select()
-            .single();
-
-        if (solError) throw solError;
-
-        // Crear detalles de la solicitud
-        const detalles = carritoItems.map(item => ({
-            solicitud_id: solicitud.id,
-            insumo_id: item.insumo_id,
-            cantidad_solicitada: item.cantidad
-        }));
-
-        const { error: detError } = await supabase
-            .from('solicitud_detalles')
-            .insert(detalles);
-
-        if (detError) throw detError;
-
-        // Actualizar token si es solicitud ordinaria
-        if (currentSolicitudType === 'ordinaria') {
-            await supabase
-                .from('usuarios')
-                .update({ token_disponible: 0 })
-                .eq('id', user.id);
-        }
-
-        // Actualizar sesión local después de consumir token
-        if (currentSolicitudType === 'ordinaria') {
-            // Actualizar sesión local
-            user.token_disponible = 0;
-            sessionStorage.setItem('currentUser', JSON.stringify(user));
-
-            // Actualizar vista del token en modal
-            const tokenStatus = document.getElementById('tokenStatus');
-            if (tokenStatus) {
-                tokenStatus.textContent = '0';
-                tokenStatus.style.color = '#e74c3c';
-            }
-
-            // Deshabilitar botón de solicitud ordinaria en dashboard
-            setTimeout(() => {
-                const btnOrdinaria = document.querySelector('[data-type="ordinaria"] .btn-solicitar');
-                if (btnOrdinaria) {
-                    btnOrdinaria.textContent = 'Token Agotado';
-                    btnOrdinaria.disabled = true;
-                    btnOrdinaria.style.background = '#ccc';
-                    btnOrdinaria.style.cursor = 'not-allowed';
-                }
-
-                // Agregar mensaje visual en la card
-                const cardOrdinaria = document.querySelector('[data-type="ordinaria"]');
-                if (cardOrdinaria) {
-                    cardOrdinaria.style.opacity = '0.6';
-                    const cardContent = cardOrdinaria.querySelector('.card-content p');
-                    if (cardContent) {
-                        cardContent.textContent = 'Token usado este mes';
-                        cardContent.style.color = '#e74c3c';
-                    }
-                }
-            }, 100);
-        }
-
-        // Mostrar notificación de éxito
-        showNotification('Solicitud enviada exitosamente', 'success');
-
-        // Limpiar carrito
-        carritoItems = [];
-        cantidadesTemp = {};
-        actualizarVistaCarrito();
-
-        setTimeout(() => cerrarModal(), 2000);
-
-    } catch (error) {
-        console.error('Error enviando solicitud:', error);
-        showNotification('Error enviando solicitud. Intenta nuevamente.', 'error');
-    }
-}*/
-
+/*
 async function enviarSolicitud() {
     if (carritoItems.length === 0) {
         showNotification('Agrega al menos un insumo al carrito', 'warning');
@@ -780,6 +644,218 @@ async function enviarSolicitud() {
     } catch (error) {
         console.error('Error enviando solicitud:', error);
         showNotification('Error enviando solicitud. Intenta nuevamente.', 'error');
+    }
+}*/
+
+async function enviarSolicitud() {
+    if (carritoItems.length === 0) {
+        showNotification('Agrega al menos un insumo al carrito', 'warning');
+        return;
+    }
+
+    try {
+        const session = sessionStorage.getItem('currentUser');
+        const user = JSON.parse(session);
+
+        // Normalizar tipo de solicitud
+        function normalizarTipoSolicitud(tipo) {
+            if (tipo.includes('ordinaria')) return 'ordinaria';
+            if (tipo.includes('extraordinaria')) return 'extraordinaria';
+            if (tipo.includes('juntas')) return 'juntas';
+            return tipo;
+        }
+
+        // Determinar qué token se usará
+        const tipoNormalizado = normalizarTipoSolicitud(currentSolicitudType);
+        let tokenTipoUsado = 'ninguno';
+        let consumeToken = false;
+
+        if (tipoNormalizado === 'ordinaria') {
+            if (recursoActual === 'insumo') {
+                tokenTipoUsado = 'ordinario';
+                consumeToken = true;
+            } else if (recursoActual === 'papeleria') {
+                tokenTipoUsado = 'ordinario';
+                consumeToken = true;
+            }
+        } else if (tipoNormalizado === 'extraordinaria') {
+            tokenTipoUsado = 'extraordinario';
+            consumeToken = true;
+        }
+
+        // Preparar datos de la solicitud
+        let datosJunta = null;
+        let datosExtraordinaria = null;
+
+        // Si es solicitud de juntas, capturar campos específicos
+        if (tipoNormalizado === 'juntas') {
+            const fechaEvento = document.getElementById('fechaEvento').value;
+            const horaEvento = document.getElementById('horaEvento').value;
+            const numParticipantes = document.getElementById('numParticipantes').value;
+            const salaEvento = document.getElementById('salaEvento').value;
+            const descripcionEvento = document.getElementById('descripcionEvento').value;
+
+            // Validar campos requeridos para juntas
+            if (!fechaEvento || !horaEvento || !numParticipantes || !salaEvento) {
+                showNotification('Complete todos los campos obligatorios del evento', 'warning');
+                return;
+            }
+
+            // Validar que la fecha sea futura
+            const fechaEventsDateTime = new Date(`${fechaEvento}T${horaEvento}`);
+            const ahora = new Date();
+            if (fechaEventsDateTime <= ahora) {
+                showNotification('La fecha y hora del evento debe ser futura', 'warning');
+                return;
+            }
+
+            datosJunta = {
+                fecha_evento: fechaEvento,
+                hora_evento: horaEvento,
+                num_participantes: parseInt(numParticipantes),
+                sala_ubicacion: salaEvento.trim(),
+                descripcion: descripcionEvento.trim() || null,
+                fecha_captura: new Date().toISOString()
+            };
+        }
+
+        // Si es solicitud extraordinaria, capturar campos específicos
+        if (tipoNormalizado === 'extraordinaria') {
+            const motivoExtraordinaria = document.getElementById('motivo-extraordinaria')?.value;
+            const fechaNecesidad = document.getElementById('fecha-necesidad')?.value;
+            const prioridadExtraordinaria = document.getElementById('prioridad-extraordinaria')?.value;
+
+            // Validar campos requeridos para extraordinaria
+            if (!motivoExtraordinaria || !fechaNecesidad) {
+                showNotification('Complete todos los campos obligatorios para solicitud extraordinaria', 'warning');
+                return;
+            }
+
+            // Validar que la fecha de necesidad sea futura
+            const fechaNecesidadDate = new Date(fechaNecesidad);
+            const ahora = new Date();
+            if (fechaNecesidadDate <= ahora) {
+                showNotification('La fecha de necesidad debe ser futura', 'warning');
+                return;
+            }
+
+            datosExtraordinaria = {
+                motivo: motivoExtraordinaria.trim(),
+                fecha_necesidad: fechaNecesidad,
+                prioridad: prioridadExtraordinaria || 'alta',
+                fecha_captura: new Date().toISOString()
+            };
+        }
+
+        console.log('📤 Enviando solicitud a API local...');
+
+        // 1. CREAR SOLICITUD PRINCIPAL usando tu API adapter
+        const solicitudData = {
+            usuario_id: user.id,
+            tipo: tipoNormalizado,
+            recurso_tipo: recursoActual,
+            estado: 'pendiente',
+            total_items: carritoItems.length,
+            token_usado: consumeToken,
+            token_tipo_usado: tokenTipoUsado,
+            datos_junta: datosJunta,
+            ...(datosExtraordinaria && { datos_extraordinaria: datosExtraordinaria })
+        };
+
+        console.log('Datos de solicitud:', solicitudData);
+
+        const { data: solicitud, error: solError } = await supabase
+            .from('solicitudes')
+            .insert(solicitudData);
+
+        if (solError) {
+            console.error('Error creando solicitud:', solError);
+            throw new Error(solError.message);
+        }
+
+        console.log('✅ Solicitud creada:', solicitud);
+
+        // 2. CREAR DETALLES DE LA SOLICITUD
+        const detalles = carritoItems.map(item => {
+            const detalle = {
+                solicitud_id: solicitud[0].id, // Asumiendo que tu API devuelve el ID
+                cantidad_solicitada: item.cantidad
+            };
+
+            // Agregar referencia según el tipo de recurso
+            if (recursoActual === 'insumo') {
+                detalle.insumo_id = item.insumo_id;
+            } else if (recursoActual === 'papeleria') {
+                detalle.papeleria_id = item.insumo_id;
+            }
+
+            return detalle;
+        });
+
+        console.log('Detalles a insertar:', detalles);
+
+        const { error: detError } = await supabase
+            .from('solicitud_detalles')
+            .insert(detalles);
+
+        if (detError) {
+            console.error('Error creando detalles:', detError);
+            throw new Error(detError.message);
+        }
+
+        // 3. ACTUALIZAR TOKENS SI ES NECESARIO
+        if (consumeToken) {
+            const actualizacion = {};
+
+            if (recursoActual === 'insumo' && tipoNormalizado === 'ordinaria') {
+                actualizacion.token_disponible = 0;
+            } else if (recursoActual === 'papeleria') {
+                if (tipoNormalizado === 'ordinaria') {
+                    actualizacion.token_papeleria_ordinario = 0;
+                } else if (tipoNormalizado === 'extraordinaria') {
+                    actualizacion.token_papeleria_extraordinario = 0;
+                }
+            }
+
+            // Actualizar en la base de datos
+            if (Object.keys(actualizacion).length > 0) {
+                const { error: updateError } = await supabase
+                    .from('usuarios')
+                    .update(actualizacion)
+                    .eq('id', user.id);
+
+                if (updateError) {
+                    console.error('Error actualizando tokens:', updateError);
+                    // No lanzamos error aquí para no revertir la solicitud
+                } else {
+                    // Actualizar sesión local
+                    Object.assign(user, actualizacion);
+                    sessionStorage.setItem('currentUser', JSON.stringify(user));
+                    actualizarVisualizacionTokens();
+                }
+            }
+        }
+
+        // Mostrar notificación de éxito
+        const tipoRecurso = recursoActual === 'insumo' ? 'insumos' : 'papelería';
+        showNotification(`Solicitud de ${tipoRecurso} enviada exitosamente`, 'success');
+
+        // Limpiar carrito y cerrar modal
+        carritoItems = [];
+        if (typeof cantidadesTemp !== 'undefined') {
+            cantidadesTemp = {};
+        }
+        actualizarVistaCarrito();
+
+        setTimeout(() => {
+            cerrarModal();
+            // Recargar la página para actualizar el estado
+            window.location.reload();
+        }, 2000);
+
+    } catch (error) {
+        console.error('❌ Error enviando solicitud:', error);
+        showNotification('Error enviando solicitud: ' + error.message, 'error');
     }
 }
 
@@ -1364,9 +1440,30 @@ function updateDynamicInfo() {
 // INICIALIZACIÓN DE LA APLICACIÓN
 // ===================================
 
-// ===================================
-// INICIALIZACIÓN DE LA APLICACIÓN
-// ===================================
+// Función para probar la conexión con el backend
+// Función simplificada para probar la conexión con el backend
+async function probarConexionBackend() {
+    try {
+        console.log('🔌 Verificando estado de la aplicación...');
+        
+        // Solo verificamos que tengamos una sesión de usuario
+        const session = sessionStorage.getItem('currentUser');
+        
+        if (!session) {
+            console.log('⚠️ No hay sesión de usuario activa');
+            return false;
+        }
+        
+        const user = JSON.parse(session);
+        console.log('✅ Sesión de usuario encontrada:', user.nombre || user.username);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ Error verificando sesión:', error);
+        return false;
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 ' + APP_CONFIG.name + ' v' + APP_CONFIG.version + ' iniciando...');

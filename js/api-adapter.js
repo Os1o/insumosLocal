@@ -21,13 +21,13 @@ async function apiFetch(endpoint, options = {}) {
         });
 
         const data = await response.json();
-        
+
         // Formato compatible con Supabase
         return {
             data: data.success ? data.data : null,
             error: data.success ? null : { message: data.error }
         };
-        
+
     } catch (error) {
         console.error('Error en apiFetch:', error);
         return {
@@ -41,7 +41,7 @@ async function apiFetch(endpoint, options = {}) {
  * API Adapter - Objeto principal que reemplaza Supabase
  */
 const API = {
-    
+
     /**
      * Sistema de autenticación
      */
@@ -152,7 +152,7 @@ class TableQuery {
         let endpoint = '';
         let actionName = '';
 
-        switch(this.table) {
+        switch (this.table) {
             case 'categorias_insumos':
                 endpoint = 'recursos.php';
                 actionName = 'get-categorias-insumos';
@@ -202,6 +202,16 @@ class TableQuery {
             case 'tokens_renovacion':
                 endpoint = 'solicitudes.php';
                 actionName = 'insert-token-renovacion';
+                break;
+            // ✅ NUEVO: Agregar soporte para historial
+            case 'historial':
+                endpoint = 'historial.php';
+                // Mapear acciones según lo que necesitemos
+                if (this.action === 'select') {
+                    actionName = 'get-historial';
+                } else if (this.action === 'insert') {
+                    actionName = 'marcar-recibido';
+                }
                 break;
 
             default:
