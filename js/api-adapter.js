@@ -179,19 +179,30 @@ class TableQuery {
                 break;
 
             case 'solicitudes':
-                endpoint = 'solicitudes.php';
-                if (this.action === 'insert') {
+                endpoint = 'admin.php';
+                if (this.action === 'select') {
+                    actionName = 'get-solicitudes';
+                } else if (this.action === 'insert') {
+                    endpoint = 'solicitudes.php';
                     actionName = 'insert';
-                    // Extraer el primer objeto del array si viene como [data]
                     if (Array.isArray(this.data) && this.data.length > 0) {
                         this.data = this.data[0];
                     }
+                } else if (this.action === 'update') {
+                    actionName = 'update-solicitud';
                 }
                 break;
 
             case 'solicitud_detalles':
-                endpoint = 'solicitudes.php';
-                actionName = 'insert-detalles';
+                endpoint = this.action === 'update' ? 'admin.php' : 'solicitudes.php';
+                actionName = this.action === 'update' ? 'update-detalle' : 'insert-detalles';
+                break;
+
+            case 'inventario_movimientos':
+                endpoint = 'admin.php';
+                if (this.action === 'insert') {
+                    actionName = 'descontar-inventario';
+                }
                 break;
 
             case 'solicitudes_recibidos':
@@ -203,6 +214,7 @@ class TableQuery {
                 endpoint = 'solicitudes.php';
                 actionName = 'insert-token-renovacion';
                 break;
+                
             // ✅ NUEVO: Agregar soporte para historial
             case 'historial':
                 endpoint = 'historial.php';

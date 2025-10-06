@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Sistema de Insumos</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/supadmin.css">
+    <link rel="stylesheet" href="css/reporte.css">
+    <link rel="stylesheet" href="css/header.css">
+    <meta name="description" content="Panel administrativo para gestión de solicitudes de insumos">
+</head>
+
+<body>
+    <!-- Header se carga dinámicamente -->
+    <div id="header-container"></div>
+
+    <main class="main-content admin-content">
+
+        <!-- Header del panel administrativo -->
+        <section class="admin-header">
+            <div class="container">
+                <h1>Panel de Administración</h1>
+                <p>Gestiona todas las solicitudes de insumos del sistema</p>
+            </div>
+        </section>
+
+        <!-- Estadísticas principales -->
+        <section class="admin-stats">
+            <div class="container">
+                <div class="stats-grid">
+                    <div class="stat-card pendientes">
+                        <h3 id="totalPendientes">0</h3>
+                        <p>Solicitudes Pendientes</p>
+                    </div>
+                    <div class="stat-card revision">
+                        <h3 id="totalRevision">0</h3>
+                        <p>En Revisión</p>
+                    </div>
+                    <div class="stat-card cerradas">
+                        <h3 id="totalCerradas">0</h3>
+                        <p>Cerradas Hoy</p>
+                    </div>
+                    <div class="stat-card items">
+                        <h3 id="totalItems"></h3>
+                        <p>Total Solicitudes</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sección Super Admin (solo visible para super_admin) -->
+        <section class="super-admin-section super-admin-only" id="superAdminSection" style="display: none;">
+            <div class="container">
+                <h2>🛡️ Gestión Avanzada - Super Administrador</h2>
+                <div class="super-admin-controls">
+                    <button class="btn-super-admin" onclick="abrirModalUsuarios()">
+                        👥 Gestionar Usuarios
+                    </button>
+                    <!--<button class="btn-super-admin" onclick="reportesAvanzados()">
+                        📊 Reportes Avanzados
+                    </button>
+                    <button class="btn-super-admin" onclick="configurarSistema()">
+                        ⚙️ Configuración del Sistema
+                    </button>-->
+                    <button class="btn-super-admin" onclick="window.ejecutarProcesoMensual()">
+                        🔄 Ejecutar Proceso Mensual
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controles de filtrado y acciones -->
+        <section class="admin-controls">
+            <div class="container">
+                <div class="controls-wrapper">
+
+                    <!-- Filtros de solicitudes -->
+                    <div class="filtros-admin">
+                        <select id="filtroEstadoAdmin" onchange="filtrarSolicitudesAdmin()">
+                            <option value="">Todos los estados</option>
+                            <option value="pendiente">⏳ Pendientes</option>
+                            <option value="en_revision">👀 En Revisión</option>
+                            <option value="cerrado">✅ Cerradas</option>
+                            <option value="cancelado">❌ Canceladas</option>
+                        </select>
+
+                        <select id="filtroTipoAdmin" onchange="filtrarSolicitudesAdmin()">
+                            <option value="">Todos los tipos</option>
+                            <option value="ordinaria">Ordinaria</option>
+                            <option value="extraordinaria">Extraordinaria</option>
+                            <option value="juntas">Juntas</option>
+                        </select>
+
+                        <select id="filtroRecurso" onchange="filtrarSolicitudesAdmin()">
+                            <option value="todos">Todos los recursos</option>
+                            <option value="insumo">Insumos</option>
+                            <option value="papeleria">Papelería</option>
+                        </select>
+                    </div>
+
+
+                    <!-- Acciones principales -->
+                    <div class="acciones-admin">
+                        <button class="btn-admin-primary" onclick="recargarSolicitudes()" id="btnRecargarAdmin">
+                            🔄 Actualizar Lista
+                        </button>
+                        <!--<button class="btn-admin-secondary" onclick="exportarDatos()" title="Próximamente">
+                            📊 Exportar Datos
+                        </button>-->
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista principal de solicitudes -->
+        <section class="admin-solicitudes">
+            <div class="container">
+
+                <!-- Estado de carga -->
+                <div id="loadingAdmin" class="loading-admin" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando solicitudes del sistema...</p>
+                </div>
+
+                <!-- Lista de solicitudes -->
+                <div id="solicitudesAdminLista" class="solicitudes-admin-lista" style="display: none;">
+                    <!-- Las solicitudes se cargan dinámicamente desde admin.js -->
+                </div>
+
+                <!-- Estado sin solicitudes -->
+                <div id="noSolicitudesAdmin" class="no-solicitudes-admin" style="display: none;">
+                    <h3>📋 No hay solicitudes</h3>
+                    <p>No se encontraron solicitudes con los filtros aplicados.</p>
+                    <button class="btn-admin-primary" onclick="recargarSolicitudes()">
+                        🔄 Recargar Lista
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Sección de herramientas adicionales -->
+        <section class="admin-tools">
+            <div class="container">
+                <div class="tools-grid">
+
+                    <!-- Herramientas rápidas -->
+                    <div class="tool-card">
+                        <h3>🔧 Herramientas Rápidas</h3>
+                        <div class="tool-actions">
+                            <button class="btn-admin-secondary" onclick="abrirReportes()"
+                                title="Generar reporte del día">
+                                📈 Reporte Mensual
+                            </button>
+                            <button class="btn-admin-secondary" onclick="limpiarFiltros()"
+                                title="Limpiar todos los filtros">
+                                🧹 Limpiar Filtros
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer se carga dinámicamente -->
+    <div id="footer-container"></div>
+
+    <!-- Modal de confirmación para acciones críticas -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content confirm-modal">
+            <div class="modal-header">
+                <h3>⚠️ Confirmar Acción</h3>
+                <button class="modal-close" onclick="cerrarConfirmModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="confirm-content">
+                    <div class="confirm-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <h4 id="confirmTitle">¿Estás seguro?</h4>
+                    <p id="confirmMessage">Esta acción no se puede deshacer.</p>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-admin-secondary" onclick="cerrarConfirmModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-admin-danger" onclick="ejecutarAccionConfirmada()"
+                        id="btnConfirmarAccion">
+                        Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--
+     Modal de procesamiento de solicitudes 
+    <div id="procesarModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content procesar-modal">
+            <div class="modal-header">
+                <h3>⚙️ Procesar Solicitud</h3>
+                <button class="modal-close" onclick="cerrarProcesarModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="solicitud-proceso-info" id="solicitudProcesoInfo">
+                     Se llena dinámicamente 
+                </div>
+
+                <div class="proceso-acciones">
+                    <div class="form-group">
+                        <label for="estadoNuevo">Cambiar estado a:</label>
+                        <select id="estadoNuevo" class="admin-estado-select">
+                            <option value="pendiente">⏳ Pendiente</option>
+                            <option value="en_revision">👀 En Revisión</option>
+                            <option value="cerrado">✅ Cerrado</option>
+                            <option value="cancelado">❌ Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notasAdmin">Notas administrativas:</label>
+                        <textarea id="notasAdmin" rows="3" placeholder="Agregar notas internas (opcional)"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-admin-secondary" onclick="cerrarProcesarModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-admin-primary" onclick="confirmarProcesamiento()" id="btnProcesar">
+                        💾 Procesar Solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>-->
+
+
+
+    <!-- Modal de revisión de solicitud -->
+    <div id="modalRevision" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Revisar Solicitud</h3>
+                <button class="modal-close" onclick="cerrarModalRevision()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="detallesSolicitud">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Reporte Mensual -->
+    <div id="reporteModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content reporte-modal">
+            <div class="modal-header">
+                <h3>📊 Reporte Mensual de Solicitudes</h3>
+                <button class="modal-close" onclick="cerrarReporteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Selector de período -->
+                <div class="periodo-selector">
+                    <select id="tipoPeriodo" onchange="cambiarPeriodo()">
+                        <option value="mes">Un mes</option>
+                        <option value="anual">Año completo</option>
+                    </select>
+                    <!-- Envolver el selector de mes en un contenedor -->
+                    <div id="mes-container">
+                        <select id="selectorMes"></select>
+                    </div>
+                    <select id="selectorAno"></select>
+                    <select id="selectorArea"></select>
+                    <select id="selectorRecurso">
+                        <option value="">Todos los recursos</option>
+                        <option value="insumo">📦 Solo Insumos</option>
+                        <option value="papeleria">📝 Solo Papelería</option>
+                    </select>
+                    <button class="btn-reporte-generar" onclick="ejecutarReporte()">
+                        Generar Reporte
+                    </button>
+                </div>
+
+                <!-- Loading del reporte -->
+                <div id="reporteLoading" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Generando reporte...</p>
+                </div>
+
+                <!-- Contenido del reporte -->
+                <div id="reporteContenido" style="display: none;">
+                    <!-- Se genera dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Scripts necesarios -->
+    <script>
+        function limpiarFiltros() {
+            document.getElementById('filtroEstadoAdmin').value = '';
+            document.getElementById('filtroTipoAdmin').value = '';
+            document.getElementById('filtroRecurso').value = '';
+            filtrarSolicitudesAdmin();
+            showNotificationAdmin('Filtros limpiados', 'success');
+        }
+    </script>
+
+    <script src="js/api-adapter.js"></script>
+
+    <!-- Chart.js para reportes -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Scripts de módulos (estos también necesitarán migración) 
+    <script src="js/reporte.js"></script>
+    <script src="js/usuarios.js"></script>-->
+
+    <!-- Script principal -->
+    <script src="js/script.js"></script>
+
+    <!-- Script del admin MIGRADO -->
+    <script src="js/admin-migrado.js"></script>
+
+
+</body>
+
+</html>
