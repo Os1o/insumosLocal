@@ -894,28 +894,31 @@ function actualizarEstadoDashboard() {
 
 
 // Función para procesar renovación mensual de tokens
+// ===================================
+// PROCESO DE RENOVACIÓN MENSUAL - MIGRADO
+// ===================================
+
 async function procesarRenovacionMensual() {
     try {
         console.log('Iniciando proceso de renovación mensual...');
 
-        // Obtener fecha del mes anterior
-        const fechaActual = new Date();
-        const mesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth() - 1, 1);
-        const finMesAnterior = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), 0);
+        // Llamar al endpoint que hace todo el proceso
+        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/renovacion-mensual.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                action: 'ejecutar-proceso'
+            })
+        });
 
-        // 1. Obtener todos los usuarios activos
-        const { data: usuarios, error: usuariosError } = await supabase
-            .from('usuarios')
-            .select('id, username, token_disponible')
-            .eq('activo', true);
-
-        if (usuariosError) throw usuariosError;
-
-        for (const usuario of usuarios) {
-            await procesarTokenUsuario(usuario.id, mesAnterior, finMesAnterior);
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Error en el proceso');
         }
 
-        console.log('Proceso de renovación mensual completado');
+        console.log('Proceso completado:', result.data);
         return true;
 
     } catch (error) {
@@ -923,6 +926,20 @@ async function procesarRenovacionMensual() {
         return false;
     }
 }
+
+// Las funciones procesarTokenUsuario y verificarRenovacionToken ya no son necesarias
+// porque ahora todo se hace en el backend PHP
+
+// Para ejecutar manualmente o programar
+window.ejecutarProcesoMensual = async function () {
+    const resultado = await procesarRenovacionMensual();
+    if (resultado) {
+        showNotification('Proceso de renovación mensual completado exitosamente', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    } else {
+        showNotification('Error en el proceso de renovación mensual', 'error');
+    }
+};
 /*
 async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
     try {
@@ -1008,6 +1025,7 @@ async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
         console.error(`Error procesando usuario ${usuarioId}:`, error);
     }
 }*/
+/*
 async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
     try {
         console.log(`--- Procesando usuario ${usuarioId} ---`);
@@ -1070,8 +1088,8 @@ async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
         console.error(`Error procesando usuario ${usuarioId}:`, error);
         throw error;
     }
-}
-
+}*/
+/*
 async function verificarRenovacionToken(usuarioId, solicitudes, recursoTipo, tokenTipo) {
     let tokenRenovado = true;
 
@@ -1115,7 +1133,7 @@ async function verificarRenovacionToken(usuarioId, solicitudes, recursoTipo, tok
     if (tokenError) throw tokenError;
 
     return tokenRenovado;
-}
+}*/
 
 // Verificar si usuario puede recibir token (para mostrar en UI)
 async function verificarElegibilidadToken(usuarioId) {
