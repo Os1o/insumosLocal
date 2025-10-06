@@ -82,7 +82,7 @@ function setupFormEvents() {
     });
 }
 
-function setupRealtimeValidation() {
+/*function setupRealtimeValidation() {
     const usernameInput = document.getElementById('username');
     const passwordInput = document.getElementById('password');
 
@@ -98,7 +98,7 @@ function setupRealtimeValidation() {
     passwordInput.addEventListener('input', function () {
         validatePassword(this.value);
     });
-}
+}*/
 
 function setupVisualEffects() {
     // Efecto de parallax suave en elementos decorativos
@@ -201,8 +201,6 @@ async function authenticateUser(username, password) {
         }
 
         console.log('✅ Usuario autenticado exitosamente');
-        console.log('DEBUG - Estructura de data:', data); 
-        console.log('DEBUG - Estructura de data.user:', data.user);
         // El endpoint ya devuelve todos los datos necesarios
         return data.user;
 
