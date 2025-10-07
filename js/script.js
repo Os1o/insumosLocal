@@ -6,14 +6,6 @@
 // ===================================
 // CONFIGURACIÓN GLOBAL
 // ===================================
-/* ===================================
-   SISTEMA SOLICITUDES DE INSUMOS - SCRIPT.JS
-   Sistema de gestión de solicitudes
-   =================================== */
-
-// ===================================
-// CONFIGURACIÓN GLOBAL
-// ===================================
 const APP_CONFIG = {
     name: 'Sistema de Solicitudes de Insumos',
     version: '1.0.0',
