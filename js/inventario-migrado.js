@@ -1463,158 +1463,79 @@ function configurarEventListeners() {
 }
 
 // ===================================
-// CARGAR HEADER Y FOOTER ADMIN
+// HEADER Y FOOTER
 // ===================================
+
+function toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        const isVisible = dropdown.style.display !== 'none';
+        dropdown.style.display = isVisible ? 'none' : 'block';
+    }
+}
+
+function logout() {
+    sessionStorage.clear();
+    window.location.href = 'login.html';
+}
+
+function inicializarHeaderAdmin() {
+    const session = sessionStorage.getItem('currentUser');
+    if (session) {
+        try {
+            const user = JSON.parse(session);
+
+            const userNameElement = document.getElementById('userName');
+            if (userNameElement) {
+                userNameElement.textContent = user.nombre;
+            }
+
+            if (user.rol !== 'super_admin') {
+                const inventarioLink = document.getElementById('inventarioLink');
+                if (inventarioLink) {
+                    inventarioLink.style.display = 'none';
+                }
+            }
+
+            console.log('✅ Header administrativo inicializado para:', user.nombre);
+
+        } catch (error) {
+            console.error('Error inicializando header admin:', error);
+        }
+    }
+}
+
+document.addEventListener('click', function (e) {
+    if (!e.target.closest('.user-menu') && !e.target.closest('.user-dropdown')) {
+        const dropdown = document.getElementById('userDropdown');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+    }
+});
 
 async function cargarHeaderAdmin() {
     try {
         const response = await fetch('includes/headerAdmin.html');
-        if (!response.ok) throw new Error('Error cargando headerAdmin.html');
+        if (!response.ok) throw new Error('Error cargando header');
 
         const html = await response.text();
         const headerContainer = document.getElementById('header-container');
 
         if (headerContainer) {
             headerContainer.innerHTML = html;
-            console.log('✅ HeaderAdmin.html cargado correctamente');
-
-            setTimeout(() => {
-                actualizarInfoUsuarioHeader();
-
-                if (typeof inicializarHeaderAdmin === 'function') {
-                    inicializarHeaderAdmin();
-                }
-            }, 100);
+            console.log('✅ Header administrativo cargado');
+            setTimeout(inicializarHeaderAdmin, 100);
         }
     } catch (error) {
-        console.error('❌ Error cargando headerAdmin.html:', error);
-        const headerContainer = document.getElementById('header-container');
-        if (headerContainer) {
-            const usuario = obtenerUsuarioActual();
-            headerContainer.innerHTML = `
-                <header class="header">
-                    <div class="container">
-                        <div class="header-content">
-                            <h1>📦 Gestión de Inventario</h1>
-                            <div class="user-info">
-                                <span class="user-name">${usuario ? usuario.nombre : 'Usuario'}</span>
-                                <span class="user-role">${usuario ? usuario.rol : 'Admin'}</span>
-                            </div>
-                            <a href="admin.html" class="back-link">← Volver al Admin</a>
-                        </div>
-                    </div>
-                </header>
-            `;
-        }
-    }
-}
-
-function obtenerUsuarioActual() {
-    try {
-        const session = sessionStorage.getItem('currentUser');
-        if (!session) {
-            console.warn('⚠️ No hay sesión de usuario activa');
-            return null;
-        }
-
-        const usuario = JSON.parse(session);
-        console.log('👤 Usuario actual:', usuario.nombre);
-        return usuario;
-
-    } catch (error) {
-        console.error('❌ Error obteniendo usuario actual:', error);
-        return null;
-    }
-}
-
-function actualizarInfoUsuarioHeader() {
-    const usuario = obtenerUsuarioActual();
-    if (!usuario) return;
-
-    const userNameElements = document.querySelectorAll('.user-name, #userName, [data-user-name]');
-    userNameElements.forEach(element => {
-        if (element) element.textContent = usuario.nombre;
-    });
-
-    const userRoleElements = document.querySelectorAll('.user-role, #userRole, [data-user-role]');
-    userRoleElements.forEach(element => {
-        if (element) element.textContent = usuario.rol || usuario.departamento;
-    });
-
-    const userEmailElements = document.querySelectorAll('.user-email, #userEmail, [data-user-email]');
-    userEmailElements.forEach(element => {
-        if (element) element.textContent = usuario.username;
-    });
-
-    const avatarElements = document.querySelectorAll('.user-avatar, #userAvatar, [data-user-avatar]');
-    avatarElements.forEach(element => {
-        if (element) {
-            const iniciales = usuario.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-            element.textContent = iniciales;
-        }
-    });
-
-    if (usuario.rol === 'super_admin') {
-        const superAdminElements = document.querySelectorAll('[data-super-admin-only]');
-        superAdminElements.forEach(element => {
-            element.style.display = 'block';
-        });
-    }
-
-    console.log('✅ Información de usuario actualizada en header');
-}
-
-function inicializarHeaderAdmin() {
-    console.log('🔧 Inicializando funciones del header admin...');
-
-    const usuario = obtenerUsuarioActual();
-    if (!usuario) return;
-
-    const userMenuToggle = document.querySelector('.user-menu-toggle');
-    const userDropdown = document.querySelector('.user-dropdown');
-
-    if (userMenuToggle && userDropdown) {
-        userMenuToggle.addEventListener('click', (e) => {
-            e.stopPropagation();
-            userDropdown.classList.toggle('show');
-        });
-
-        document.addEventListener('click', () => {
-            userDropdown.classList.remove('show');
-        });
-    }
-
-    const logoutBtn = document.querySelector('.logout-btn, [data-logout]');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            cerrarSesion();
-        });
-    }
-
-    if (typeof showNotification === 'function') {
-        showNotification(`Bienvenido, ${usuario.nombre}`, 'success', 2000);
-    }
-
-    console.log('✅ Header admin inicializado correctamente');
-}
-
-function cerrarSesion() {
-    if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-        console.log('🚪 Cerrando sesión...');
-
-        sessionStorage.removeItem('currentUser');
-        localStorage.removeItem('userSession');
-        localStorage.removeItem('rememberLogin');
-
-        window.location.href = 'login.html';
+        console.error('Error cargando header administrativo:', error);
     }
 }
 
 async function cargarFooter() {
     try {
         const response = await fetch('includes/footerAdmin.html');
-        if (!response.ok) throw new Error('Error cargando footerAdmin.html');
+        if (!response.ok) throw new Error('Error cargando footer');
 
         const html = await response.text();
         const footerContainer = document.getElementById('footer-container');
@@ -1622,39 +1543,9 @@ async function cargarFooter() {
         if (footerContainer) {
             footerContainer.innerHTML = html;
             console.log('✅ Footer cargado correctamente');
-
-            const currentYearSpan = document.getElementById('currentYear');
-            if (currentYearSpan) {
-                currentYearSpan.textContent = new Date().getFullYear();
-            }
-
-            setTimeout(() => {
-                if (typeof inicializarFooter === 'function') {
-                    inicializarFooter();
-                }
-            }, 100);
         }
     } catch (error) {
-        console.error('❌ Error cargando footer:', error);
-        const footerContainer = document.getElementById('footer-container');
-        if (footerContainer) {
-            footerContainer.innerHTML = `
-                <footer class="footer">
-                    <div class="container">
-                        <div class="footer-content">
-                            <div class="footer-info">
-                                <p>&copy; ${new Date().getFullYear()} Sistema de Insumos. Todos los derechos reservados.</p>
-                            </div>
-                            <div class="footer-links">
-                                <a href="index.html" class="footer-link">Inicio</a>
-                                <a href="historial.html" class="footer-link">Historial</a>
-                                <a href="#" class="footer-link">Ayuda</a>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-            `;
-        }
+        console.error('Error cargando footer:', error);
     }
 }
 
