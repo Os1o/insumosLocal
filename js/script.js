@@ -36,7 +36,7 @@ const supabase = window.API;
 
 if (!supabase) {
     console.error('❌ API adapter no encontrado. Verifica que api-adapter.js se cargue antes que script.js');
-    
+
     // Fallback: crear un objeto básico para evitar errores
     window.API = {
         auth: {
@@ -45,14 +45,14 @@ if (!supabase) {
             getProfile: () => ({ data: null, error: { message: 'API no disponible' } })
         },
         from: () => ({
-            select: () => ({ 
-                eq: () => ({ 
-                    single: () => Promise.resolve({ data: null, error: { message: 'API no disponible' } }) 
-                }) 
+            select: () => ({
+                eq: () => ({
+                    single: () => Promise.resolve({ data: null, error: { message: 'API no disponible' } })
+                })
             })
         })
     };
-    
+
     const supabase = window.API;
 }
 
@@ -403,7 +403,7 @@ function actualizarVistaCarrito() {
     container.innerHTML = html;
     count.textContent = carritoItems.length;
     btnEnviar.disabled = false;
-}               
+}
 
 
 // Remover del carrito
@@ -412,232 +412,7 @@ function removerDelCarrito(index) {
     actualizarVistaCarrito();
     showNotification('Item removido del carrito', 'info');
 }
-/*
-async function enviarSolicitud() {
-    if (carritoItems.length === 0) {
-        showNotification('Agrega al menos un insumo al carrito', 'warning');
-        return;
-    }
 
-    try {
-        const session = sessionStorage.getItem('currentUser');
-        const user = JSON.parse(session);
-
-        // NUEVO: Función para normalizar el tipo de solicitud
-        function normalizarTipoSolicitud(tipo) {
-            if (tipo.includes('ordinaria')) return 'ordinaria';
-            if (tipo.includes('extraordinaria')) return 'extraordinaria';
-            if (tipo.includes('juntas')) return 'juntas';
-            return tipo;
-        }
-
-        // NUEVO: Determinar qué token se usará y actualizará
-        const tipoNormalizado = normalizarTipoSolicitud(currentSolicitudType);
-        let tokenTipoUsado = 'ninguno';
-        let consumeToken = false;
-
-        if (tipoNormalizado === 'ordinaria') {
-            if (recursoActual === 'insumo') {
-                tokenTipoUsado = 'ordinario';
-                consumeToken = true;
-            } else if (recursoActual === 'papeleria') {
-                tokenTipoUsado = 'ordinario';
-                consumeToken = true;
-            }
-        } else if (tipoNormalizado === 'extraordinaria') {
-            tokenTipoUsado = 'extraordinario';
-            consumeToken = true;
-        }
-
-        // Preparar datos de la solicitud
-        let datosJunta = null;
-        let datosExtraordinaria = null;
-
-        // Si es solicitud de juntas, capturar campos específicos
-        if (tipoNormalizado === 'juntas') {
-            const fechaEvento = document.getElementById('fechaEvento').value;
-            const horaEvento = document.getElementById('horaEvento').value;
-            const numParticipantes = document.getElementById('numParticipantes').value;
-            const salaEvento = document.getElementById('salaEvento').value;
-            const descripcionEvento = document.getElementById('descripcionEvento').value;
-
-            // Validar campos requeridos para juntas
-            if (!fechaEvento || !horaEvento || !numParticipantes || !salaEvento) {
-                showNotification('Complete todos los campos obligatorios del evento', 'warning');
-                return;
-            }
-
-            // Validar que la fecha sea futura
-            const fechaEventsDateTime = new Date(`${fechaEvento}T${horaEvento}`);
-            const ahora = new Date();
-            if (fechaEventsDateTime <= ahora) {
-                showNotification('La fecha y hora del evento debe ser futura', 'warning');
-                return;
-            }
-
-            // Preparar objeto JSON para datos_junta
-            datosJunta = {
-                fecha_evento: fechaEvento,
-                hora_evento: horaEvento,
-                num_participantes: parseInt(numParticipantes),
-                sala_ubicacion: salaEvento.trim(),
-                descripcion: descripcionEvento.trim() || null,
-                fecha_captura: new Date().toISOString()
-            };
-        }
-
-        // NUEVO: Si es solicitud extraordinaria, capturar campos específicos
-        if (tipoNormalizado === 'extraordinaria') {
-            const motivoExtraordinaria = document.getElementById('motivo-extraordinaria')?.value;
-            const fechaNecesidad = document.getElementById('fecha-necesidad')?.value;
-            const prioridadExtraordinaria = document.getElementById('prioridad-extraordinaria')?.value;
-
-            // Validar campos requeridos para extraordinaria
-            if (!motivoExtraordinaria || !fechaNecesidad) {
-                showNotification('Complete todos los campos obligatorios para solicitud extraordinaria', 'warning');
-                return;
-            }
-
-            // Validar que la fecha de necesidad sea futura
-            const fechaNecesidadDate = new Date(fechaNecesidad);
-            const ahora = new Date();
-            if (fechaNecesidadDate <= ahora) {
-                showNotification('La fecha de necesidad debe ser futura', 'warning');
-                return;
-            }
-
-            // Preparar objeto JSON para datos extraordinaria
-            datosExtraordinaria = {
-                motivo: motivoExtraordinaria.trim(),
-                fecha_necesidad: fechaNecesidad,
-                prioridad: prioridadExtraordinaria || 'alta',
-                fecha_captura: new Date().toISOString()
-            };
-        }
-
-        // Crear solicitud principal CON todos los nuevos campos
-        const { data: solicitud, error: solError } = await supabase
-            .from('solicitudes')
-            .insert({
-                usuario_id: user.id,
-                tipo: tipoNormalizado, // CAMBIADO: Usar tipo normalizado
-                recurso_tipo: recursoActual, // NUEVO: Tipo de recurso
-                estado: 'pendiente',
-                total_items: carritoItems.length,
-                token_usado: consumeToken, // CAMBIADO: Basado en lógica nueva
-                token_tipo_usado: tokenTipoUsado, // NUEVO: Qué tipo de token se usó
-                datos_junta: datosJunta,
-                // NUEVO: Agregar datos extraordinaria si aplica
-                ...(datosExtraordinaria && { datos_extraordinaria: datosExtraordinaria })
-            })
-            .select()
-            .single();
-
-        if (solError) throw solError;
-
-        // Crear detalles de la solicitud - MODIFICADO para manejar papelería
-        const detalles = carritoItems.map(item => {
-            const detalle = {
-                solicitud_id: solicitud.id,
-                cantidad_solicitada: item.cantidad
-            };
-
-            // Agregar referencia según el tipo de recurso
-            if (recursoActual === 'insumo') {
-                detalle.insumo_id = item.insumo_id;
-            } else if (recursoActual === 'papeleria') {
-                detalle.papeleria_id = item.insumo_id; // Reutilizamos insumo_id para papeleria_id
-            }
-
-            return detalle;
-        });
-
-        const { error: detError } = await supabase
-            .from('solicitud_detalles')
-            .insert(detalles);
-
-        if (detError) throw detError;
-
-        // NUEVO: Actualizar tokens según el tipo de solicitud y recurso
-        if (consumeToken) {
-            const actualizacion = {};
-
-            if (recursoActual === 'insumo' && tipoNormalizado === 'ordinaria') {
-                actualizacion.token_disponible = 0;
-            } else if (recursoActual === 'papeleria') {
-                if (tipoNormalizado === 'ordinaria') {
-                    actualizacion.token_papeleria_ordinario = 0;
-                } else if (tipoNormalizado === 'extraordinaria') {
-                    actualizacion.token_papeleria_extraordinario = 0;
-                }
-            }
-
-            // Actualizar en la base de datos
-            if (Object.keys(actualizacion).length > 0) {
-                await supabase
-                    .from('usuarios')
-                    .update(actualizacion)
-                    .eq('id', user.id);
-
-                // NUEVO: Actualizar sesión local
-                Object.assign(user, actualizacion);
-                sessionStorage.setItem('currentUser', JSON.stringify(user));
-
-                // NUEVO: Actualizar visualización de tokens
-                actualizarVisualizacionTokens();
-            }
-        }
-
-        // MODIFICADO: Actualizar dashboard solo para insumos ordinarios (compatibilidad)
-        if (currentSolicitudType === 'ordinaria' && recursoActual === 'insumo') {
-            // Actualizar vista del token en modal
-            const tokenStatus = document.getElementById('tokenStatus');
-            if (tokenStatus) {
-                tokenStatus.textContent = '0';
-                tokenStatus.style.color = '#e74c3c';
-            }
-
-            // Deshabilitar botón de solicitud ordinaria en dashboard
-            setTimeout(() => {
-                const btnOrdinaria = document.querySelector('[data-type="ordinaria"] .btn-solicitar');
-                if (btnOrdinaria) {
-                    btnOrdinaria.textContent = 'Token Agotado';
-                    btnOrdinaria.disabled = true;
-                    btnOrdinaria.style.background = '#ccc';
-                    btnOrdinaria.style.cursor = 'not-allowed';
-                }
-
-                // Agregar mensaje visual en la card
-                const cardOrdinaria = document.querySelector('[data-type="ordinaria"]');
-                if (cardOrdinaria) {
-                    cardOrdinaria.style.opacity = '0.6';
-                    const cardContent = cardOrdinaria.querySelector('.card-content p');
-                    if (cardContent) {
-                        cardContent.textContent = 'Token usado este mes';
-                        cardContent.style.color = '#e74c3c';
-                    }
-                }
-            }, 100);
-        }
-
-        // Mostrar notificación de éxito
-        const tipoRecurso = recursoActual === 'insumo' ? 'insumos' : 'papelería';
-        showNotification(`Solicitud de ${tipoRecurso} enviada exitosamente`, 'success');
-
-        // Limpiar carrito
-        carritoItems = [];
-        if (typeof cantidadesTemp !== 'undefined') {
-            cantidadesTemp = {};
-        }
-        actualizarVistaCarrito();
-
-        setTimeout(() => cerrarModal(), 2000);
-
-    } catch (error) {
-        console.error('Error enviando solicitud:', error);
-        showNotification('Error enviando solicitud. Intenta nuevamente.', 'error');
-    }
-}*/
 
 async function enviarSolicitud() {
     if (carritoItems.length === 0) {
@@ -808,6 +583,14 @@ async function enviarSolicitud() {
                     actualizacion.token_papeleria_extraordinario = 0;
                 }
             }
+            // ⭐⭐⭐ AGREGAR ESTOS LOGS DE DEBUG ⭐⭐⭐
+            console.log('🔍 === DEBUG TOKENS ===');
+            console.log('📌 recursoActual:', recursoActual);
+            console.log('📌 currentSolicitudType:', currentSolicitudType);
+            console.log('📌 tipoNormalizado:', tipoNormalizado);
+            console.log('📌 consumeToken:', consumeToken);
+            console.log('📌 actualizacion:', JSON.stringify(actualizacion));
+            console.log('======================');
 
             // Actualizar en la base de datos
             if (Object.keys(actualizacion).length > 0) {
@@ -905,7 +688,7 @@ async function procesarRenovacionMensual() {
         });
 
         const result = await response.json();
-        
+
         if (!result.success) {
             throw new Error(result.error || 'Error en el proceso');
         }
@@ -932,200 +715,7 @@ window.ejecutarProcesoMensual = async function () {
         showNotification('Error en el proceso de renovación mensual', 'error');
     }
 };
-/*
-async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
-    try {
-        console.log(`--- Procesando usuario ${usuarioId} ---`);
-        console.log(`Rango fechas: ${inicioMes.toISOString()} a ${finMes.toISOString()}`);
 
-        // 1. Buscar solicitudes del mes anterior que usaron token
-        const { data: solicitudesToken, error: solicitudesError } = await supabase
-            .from('solicitudes')
-            .select('id, fecha_solicitud, token_usado')
-            .eq('usuario_id', usuarioId)
-            .eq('token_usado', true)
-            .gte('fecha_solicitud', inicioMes.toISOString())
-            .lte('fecha_solicitud', finMes.toISOString());
-
-        if (solicitudesError) throw solicitudesError;
-
-        console.log(`Solicitudes con token encontradas: ${solicitudesToken.length}`);
-        console.log('Detalles de solicitudes:', solicitudesToken);
-
-        let tokenRenovado = true;
-
-        if (solicitudesToken.length > 0) {
-            console.log('Verificando si todas están marcadas como recibidas...');
-
-            for (const solicitud of solicitudesToken) {
-                console.log(`Verificando solicitud ${solicitud.id.substring(0, 8)}...`);
-
-                const { data: recibido, error: recibidoError } = await supabase
-                    .from('solicitudes_recibidos')
-                    .select('id, fecha_marcado_recibido')
-                    .eq('solicitud_id', solicitud.id)
-                    .eq('usuario_id', usuarioId)
-                    .single();
-
-                console.log(`Resultado búsqueda recibido:`, { data: recibido, error: recibidoError?.code });
-
-                if (recibidoError && recibidoError.code !== 'PGRST116') {
-                    throw recibidoError;
-                }
-
-                if (!recibido) {
-                    console.log(`BLOQUEO: Solicitud ${solicitud.id.substring(0, 8)} NO marcada como recibida`);
-                    tokenRenovado = false;
-                    break;
-                } else {
-                    console.log(`OK: Solicitud ${solicitud.id.substring(0, 8)} marcada como recibida el ${recibido.fecha_marcado_recibido}`);
-                }
-            }
-        } else {
-            console.log('Usuario sin solicitudes con token del mes anterior - token renovado automáticamente');
-        }
-
-        console.log(`DECISION FINAL: Token para usuario ${usuarioId} será ${tokenRenovado ? 'RENOVADO' : 'BLOQUEADO'}`);
-
-        // 3. Registrar en tokens_renovacion
-        const { error: tokenError } = await supabase
-            .from('tokens_renovacion')
-            .insert({
-                usuario_id: usuarioId,
-                mes_ano: finMes.toISOString().substring(0, 7),
-                tenia_solicitud: solicitudesToken.length > 0,
-                marco_recibido: tokenRenovado,
-                token_renovado: tokenRenovado,
-                fecha_verificacion: new Date().toISOString()
-            });
-
-        if (tokenError) throw tokenError;
-
-        // 4. Actualizar token_disponible del usuario
-        const nuevoToken = tokenRenovado ? 1 : 0;
-        const { error: updateError } = await supabase
-            .from('usuarios')
-            .update({ token_disponible: nuevoToken })
-            .eq('id', usuarioId);
-
-        if (updateError) throw updateError;
-
-        console.log(`COMPLETADO: Usuario ${usuarioId} - Token actualizado a ${nuevoToken}`);
-        console.log('---');
-
-    } catch (error) {
-        console.error(`Error procesando usuario ${usuarioId}:`, error);
-    }
-}*/
-/*
-async function procesarTokenUsuario(usuarioId, inicioMes, finMes) {
-    try {
-        console.log(`--- Procesando usuario ${usuarioId} ---`);
-        console.log(`Rango fechas: ${inicioMes.toISOString()} a ${finMes.toISOString()}`);
-
-        // Buscar solicitudes del mes anterior que usaron token
-        const { data: solicitudesToken, error: solicitudesError } = await supabase
-            .from('solicitudes')
-            .select('id, fecha_solicitud, token_usado, recurso_tipo, token_tipo_usado')
-            .eq('usuario_id', usuarioId)
-            .eq('token_usado', true)
-            .gte('fecha_solicitud', inicioMes.toISOString())
-            .lte('fecha_solicitud', finMes.toISOString());
-
-        if (solicitudesError) throw solicitudesError;
-
-        console.log(`Solicitudes con token encontradas: ${solicitudesToken.length}`);
-
-        // Separar por tipo de token
-        const solicitudesInsumo = solicitudesToken.filter(s => 
-            (s.recurso_tipo === 'insumo' || !s.recurso_tipo) && s.token_tipo_usado === 'ordinario'
-        );
-        const solicitudesPapeleriaOrd = solicitudesToken.filter(s => 
-            s.recurso_tipo === 'papeleria' && s.token_tipo_usado === 'ordinario'
-        );
-        const solicitudesPapeleriaExt = solicitudesToken.filter(s => 
-            s.recurso_tipo === 'papeleria' && s.token_tipo_usado === 'extraordinario'
-        );
-
-        // Procesar cada tipo de token
-        const renovaciones = {};
-
-        // Token de insumos
-        renovaciones.insumo = await verificarRenovacionToken(usuarioId, solicitudesInsumo, 'insumo', 'ordinario');
-
-        // Token papelería ordinario
-        renovaciones.papeleria_ordinario = await verificarRenovacionToken(usuarioId, solicitudesPapeleriaOrd, 'papeleria', 'ordinario');
-
-        // Token papelería extraordinario
-        renovaciones.papeleria_extraordinario = await verificarRenovacionToken(usuarioId, solicitudesPapeleriaExt, 'papeleria', 'extraordinario');
-
-        // Actualizar tokens del usuario
-        const updateData = {};
-        if (renovaciones.insumo) updateData.token_disponible = 1;
-        if (renovaciones.papeleria_ordinario) updateData.token_papeleria_ordinario = 1;
-        if (renovaciones.papeleria_extraordinario) updateData.token_papeleria_extraordinario = 1;
-
-        if (Object.keys(updateData).length > 0) {
-            const { error: updateError } = await supabase
-                .from('usuarios')
-                .update(updateData)
-                .eq('id', usuarioId);
-
-            if (updateError) throw updateError;
-        }
-
-        console.log(`RENOVACIONES PARA USUARIO ${usuarioId}:`, renovaciones);
-
-    } catch (error) {
-        console.error(`Error procesando usuario ${usuarioId}:`, error);
-        throw error;
-    }
-}*/
-/*
-async function verificarRenovacionToken(usuarioId, solicitudes, recursoTipo, tokenTipo) {
-    let tokenRenovado = true;
-
-    if (solicitudes.length > 0) {
-        console.log(`Verificando ${solicitudes.length} solicitudes de ${recursoTipo} ${tokenTipo}...`);
-
-        for (const solicitud of solicitudes) {
-            const { data: recibido, error: recibidoError } = await supabase
-                .from('solicitudes_recibidos')
-                .select('id, fecha_marcado_recibido')
-                .eq('solicitud_id', solicitud.id)
-                .eq('usuario_id', usuarioId)
-                .single();
-
-            if (recibidoError && recibidoError.code !== 'PGRST116') {
-                throw recibidoError;
-            }
-
-            if (!recibido) {
-                console.log(`BLOQUEO: Solicitud ${solicitud.id.substring(0, 8)} NO marcada como recibida`);
-                tokenRenovado = false;
-                break;
-            }
-        }
-    }
-
-    // Registrar en tokens_renovacion
-    const { error: tokenError } = await supabase
-        .from('tokens_renovacion')
-        .insert({
-            usuario_id: usuarioId,
-            mes_ano: new Date().toISOString().substring(0, 7),
-            recurso_tipo: recursoTipo,
-            token_tipo: tokenTipo,
-            tenia_solicitud: solicitudes.length > 0,
-            marco_recibido: tokenRenovado,
-            token_renovado: tokenRenovado,
-            fecha_verificacion: new Date().toISOString()
-        });
-
-    if (tokenError) throw tokenError;
-
-    return tokenRenovado;
-}*/
 
 // Verificar si usuario puede recibir token (para mostrar en UI)
 async function verificarElegibilidadToken(usuarioId) {
@@ -1455,19 +1045,19 @@ function updateDynamicInfo() {
 async function probarConexionBackend() {
     try {
         console.log('🔌 Verificando estado de la aplicación...');
-        
+
         // Solo verificamos que tengamos una sesión de usuario
         const session = sessionStorage.getItem('currentUser');
-        
+
         if (!session) {
             console.log('⚠️ No hay sesión de usuario activa');
             return false;
         }
-        
+
         const user = JSON.parse(session);
         console.log('✅ Sesión de usuario encontrada:', user.nombre || user.username);
         return true;
-        
+
     } catch (error) {
         console.error('❌ Error verificando sesión:', error);
         return false;
@@ -1493,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Probar conexión con el backend primero
         console.log('🔌 Probando conexión con backend...');
         const conexionOk = await probarConexionBackend();
-        
+
         if (!conexionOk) {
             showNotification('No se pudo conectar con el servidor. Algunas funciones pueden no estar disponibles.', 'warning');
             // Continuar a pesar del error, pero con funcionalidad limitada
@@ -1501,11 +1091,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Cargar componentes del sistema
         const loadPromises = [];
-        
+
         if (headerContainer) {
             loadPromises.push(loadComponent('header-container', 'includes/header.html'));
         }
-        
+
         if (footerContainer) {
             loadPromises.push(loadComponent('footer-container', 'includes/foot.html'));
         }
@@ -1559,7 +1149,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             setupAllEventListeners();
             loadInitialData();
-            
+
             // Configurar selector de recursos por defecto (fallback)
             if (document.getElementById('btn-insumos')) {
                 seleccionarRecurso('insumo');
@@ -2264,10 +1854,10 @@ function logout() {
 
 // Función para normalizar el tipo de solicitud antes de enviar
 function normalizarTipoSolicitud(tipo) {
-    if (tipo.includes('ordinaria')) return 'ordinaria';
-    if (tipo.includes('extraordinaria')) return 'extraordinaria';
+    if (tipo.includes('extraordinaria')) return 'extraordinaria';  // Primero
+    if (tipo.includes('ordinaria')) return 'ordinaria';            // Después
     if (tipo.includes('juntas')) return 'juntas';
-    return tipo; // Fallback
+    return tipo;
 }
 
 
@@ -2286,7 +1876,7 @@ async function cargarTokensPapeleria() {
         if (!session) return;
 
         const user = JSON.parse(session);
-        
+
         // Los tokens ya vienen en la sesión del login
         // Solo necesitamos actualizar la visualización
         console.log('Tokens del usuario:', {
@@ -2615,7 +2205,7 @@ document.addEventListener('DOMContentLoaded', function () {
     cargarTokensPapeleria();
 
     // Configurar selector de recursos por defecto
-        if (document.getElementById('btn-insumos')) {
+    if (document.getElementById('btn-insumos')) {
         seleccionarRecurso('insumo');
     }
 });

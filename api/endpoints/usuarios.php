@@ -1,7 +1,8 @@
 <?php
 /**
- * Endpoint de gestión de usuarios
- * Solo accesible para super_admin
+ * Endpoint de gestión de usuarios - VERSIÓN HÍBRIDA
+ * - Super Admin: CRUD completo de usuarios
+ * - Usuarios normales: Actualizar sus propios tokens
  */
 
 require_once __DIR__ . '/../config/database.php';
@@ -17,37 +18,56 @@ try {
     $database = new Database();
     $conn = $database->getConnection();
     
-    // Verificar que sea super_admin para todas las operaciones
+    // Verificar autenticación para todas las operaciones
     SessionManager::requireAuth();
     $currentUser = SessionManager::getCurrentUser();
     
-    if ($currentUser['rol'] !== 'super_admin') {
-        sendResponse(false, null, 'Solo super administradores pueden gestionar usuarios', 403);
-    }
-    
     switch($action) {
+        // ============================================
+        // OPERACIONES QUE REQUIEREN SUPER_ADMIN
+        // ============================================
+        
         case 'get-all':
+            requireSuperAdmin($currentUser);
             handleGetAllUsuarios($conn);
             break;
             
         case 'get-roles':
+            requireSuperAdmin($currentUser);
             handleGetRoles($conn);
             break;
             
         case 'create':
+            requireSuperAdmin($currentUser);
             handleCreateUsuario($conn, $requestData);
             break;
             
-        case 'update':
-            handleUpdateUsuario($conn, $requestData);
+        case 'update-admin':
+            requireSuperAdmin($currentUser);
+            handleUpdateUsuarioAdmin($conn, $requestData);
             break;
             
         case 'toggle-estado':
+            requireSuperAdmin($currentUser);
             handleToggleEstado($conn, $requestData);
             break;
             
         case 'reset-token':
+            requireSuperAdmin($currentUser);
             handleResetToken($conn, $requestData);
+            break;
+        
+        // ============================================
+        // OPERACIONES PARA CUALQUIER USUARIO
+        // ============================================
+        
+        case 'update':
+            // Usuarios pueden actualizar sus propios tokens
+            handleUpdateUsuario($conn, $requestData, $currentUser);
+            break;
+            
+        case 'get':
+            handleGetUsuario($conn, $requestData);
             break;
             
         default:
@@ -58,6 +78,19 @@ try {
     logError('Error en usuarios.php: ' . $e->getMessage());
     sendResponse(false, null, 'Error del servidor: ' . $e->getMessage(), 500);
 }
+
+/**
+ * Helper: Verificar que el usuario sea super_admin
+ */
+function requireSuperAdmin($currentUser) {
+    if ($currentUser['rol'] !== 'super_admin') {
+        sendResponse(false, null, 'Solo super administradores pueden realizar esta operación', 403);
+    }
+}
+
+// ============================================
+// FUNCIONES PARA SUPER_ADMIN
+// ============================================
 
 /**
  * Obtener todos los usuarios con información de roles
@@ -122,7 +155,7 @@ function handleGetRoles($conn) {
 }
 
 /**
- * Crear nuevo usuario
+ * Crear nuevo usuario (SOLO SUPER_ADMIN)
  */
 function handleCreateUsuario($conn, $requestData) {
     try {
@@ -183,7 +216,7 @@ function handleCreateUsuario($conn, $requestData) {
             'username' => strtoupper($data['username']),
             'nombre' => $data['nombre'],
             'departamento' => $data['departamento'],
-            'password_hash' => $data['password_hash'], // Ya viene del frontend
+            'password_hash' => $data['password_hash'],
             'rol_id' => $data['rol_id'],
             'activo' => isset($data['activo']) ? ($data['activo'] ? 1 : 0) : 1,
             'token_disponible' => isset($data['token_disponible']) ? $data['token_disponible'] : 1,
@@ -205,9 +238,10 @@ function handleCreateUsuario($conn, $requestData) {
 }
 
 /**
- * Actualizar usuario existente
+ * Actualizar usuario existente (SOLO SUPER_ADMIN)
+ * Permite actualizar TODOS los campos
  */
-function handleUpdateUsuario($conn, $requestData) {
+function handleUpdateUsuarioAdmin($conn, $requestData) {
     try {
         $usuarioId = $requestData['usuario_id'] ?? null;
         $data = $requestData['data'] ?? null;
@@ -272,13 +306,13 @@ function handleUpdateUsuario($conn, $requestData) {
         sendResponse(true, [$usuario]);
         
     } catch(Exception $e) {
-        logError('Error en handleUpdateUsuario: ' . $e->getMessage());
+        logError('Error en handleUpdateUsuarioAdmin: ' . $e->getMessage());
         throw $e;
     }
 }
 
 /**
- * Activar/Desactivar usuario
+ * Activar/Desactivar usuario (SOLO SUPER_ADMIN)
  */
 function handleToggleEstado($conn, $requestData) {
     try {
@@ -318,7 +352,7 @@ function handleToggleEstado($conn, $requestData) {
 }
 
 /**
- * Resetear tokens de usuario
+ * Resetear tokens de usuario (SOLO SUPER_ADMIN)
  */
 function handleResetToken($conn, $requestData) {
     try {
@@ -373,6 +407,131 @@ function handleResetToken($conn, $requestData) {
         
     } catch(Exception $e) {
         logError('Error en handleResetToken: ' . $e->getMessage());
+        throw $e;
+    }
+}
+
+// ============================================
+// FUNCIONES PARA CUALQUIER USUARIO AUTENTICADO
+// ============================================
+
+/**
+ * Actualizar datos de usuario (principalmente tokens)
+ * Usuarios normales: Solo pueden actualizar sus propios tokens
+ * Admins: Pueden actualizar tokens de cualquier usuario
+ */
+function handleUpdateUsuario($conn, $requestData, $currentUser) {
+    try {
+        $data = $requestData['data'] ?? null;
+        $filters = $requestData['filters'] ?? [];
+        
+        if (!$data) {
+            sendResponse(false, null, 'Datos de actualización requeridos', 400);
+        }
+        
+        // Determinar el ID del usuario a actualizar
+        $targetUserId = null;
+        
+        if (isset($filters['id'])) {
+            $targetUserId = $filters['id']['value'];
+        } else {
+            // Si no se especifica ID, actualizar el usuario actual
+            $targetUserId = $currentUser['id'];
+        }
+        
+        // Verificar permisos: usuarios normales solo pueden actualizar sus propios datos
+        $isAdmin = in_array($currentUser['rol'], ['admin', 'super_admin']);
+        
+        if (!$isAdmin && $targetUserId !== $currentUser['id']) {
+            sendResponse(false, null, 'No tienes permiso para actualizar este usuario', 403);
+        }
+        
+        // Construir SQL dinámicamente según los campos a actualizar
+        $setClauses = [];
+        $params = [];
+        
+        // Campos permitidos para actualización de tokens
+        $allowedFields = [
+            'token_disponible',
+            'token_papeleria_ordinario', 
+            'token_papeleria_extraordinario',
+            'fecha_ultimo_login'
+        ];
+        
+        foreach ($data as $field => $value) {
+            if (in_array($field, $allowedFields)) {
+                $setClauses[] = "$field = :$field";
+                $params[$field] = $value;
+            }
+        }
+        
+        if (empty($setClauses)) {
+            sendResponse(false, null, 'No hay campos válidos para actualizar', 400);
+        }
+        
+        $params['target_user_id'] = $targetUserId;
+        
+        $sql = "
+            UPDATE usuarios 
+            SET " . implode(', ', $setClauses) . "
+            WHERE id = :target_user_id
+            RETURNING *
+        ";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        
+        $usuario = $stmt->fetch();
+        
+        if (!$usuario) {
+            sendResponse(false, null, 'Usuario no encontrado', 404);
+        }
+        
+        // Actualizar sesión si es el usuario actual
+        if ($usuario['id'] === $currentUser['id']) {
+            SessionManager::updateTokens([
+                'token_disponible' => $usuario['token_disponible'],
+                'token_papeleria_ordinario' => $usuario['token_papeleria_ordinario'],
+                'token_papeleria_extraordinario' => $usuario['token_papeleria_extraordinario']
+            ]);
+        }
+        
+        sendResponse(true, [$usuario]);
+        
+    } catch(Exception $e) {
+        logError('Error en handleUpdateUsuario: ' . $e->getMessage());
+        throw $e;
+    }
+}
+
+/**
+ * Obtener datos de usuario
+ */
+function handleGetUsuario($conn, $requestData) {
+    try {
+        $filters = $requestData['filters'] ?? [];
+        
+        $sql = "SELECT * FROM usuarios WHERE 1=1";
+        $params = [];
+        
+        if (isset($filters['id'])) {
+            $sql .= " AND id = :id";
+            $params['id'] = $filters['id']['value'];
+        }
+        
+        if (isset($filters['username'])) {
+            $sql .= " AND username = :username";
+            $params['username'] = $filters['username']['value'];
+        }
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $usuarios = $stmt->fetchAll();
+        
+        sendResponse(true, $usuarios);
+        
+    } catch(Exception $e) {
+        logError('Error en handleGetUsuario: ' . $e->getMessage());
         throw $e;
     }
 }

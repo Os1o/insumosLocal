@@ -435,7 +435,7 @@ async function guardarUsuario(event) {
             userData.password_hash = password.trim();
         }
         
-        const action = usuarioId ? 'update' : 'create';
+        const action = usuarioId ? 'update-admin' : 'create';
         const bodyData = { action, data: userData };
         
         if (usuarioId) {
