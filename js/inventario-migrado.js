@@ -999,12 +999,12 @@ function actualizarTextoModal(tipo) {
         titulo.textContent = esPapeleria ? '📝 Nuevo Item de Papelería' : '📦 Nuevo Insumo';
     }
 
-    const nombreInput = document.getElementById('nombreItem');
+    const nombreInput = document.getElementById('nombreInsumo');
     if (nombreInput) {
         nombreInput.placeholder = esPapeleria ? 'Ej: Hojas Bond Carta' : 'Ej: Agua Bonafont 1.2L';
     }
 
-    const btnConfirmar = document.getElementById('btnConfirmarNuevoItem');
+    const btnConfirmar = document.getElementById('btnConfirmarNuevoInsumo');
     if (btnConfirmar) {
         btnConfirmar.innerHTML = esPapeleria ? '📝 Crear Item de Papelería' : '📦 Crear Insumo';
     }
@@ -1035,13 +1035,13 @@ async function cargarCategoriasEnSelect(selectId, categorias) {
 
 async function confirmarNuevoItem() {
     try {
-        const nombre = document.getElementById('nombreItem').value.trim();
-        const descripcion = document.getElementById('descripcionItem').value.trim();
+        const nombre = document.getElementById('nombreInsumo').value.trim();
+        const descripcion = document.getElementById('descripcionInsumo').value.trim();
         const categoriaId = document.getElementById('categoriaItem').value;
-        const unidad = document.getElementById('unidadItem').value;
+        const unidad = document.getElementById('unidadInsumo').value;
         const stockInicial = parseInt(document.getElementById('stockInicial').value) || 0;
         const stockMinimo = parseInt(document.getElementById('stockMinimo').value);
-        const visibilidad = document.getElementById('visibilidadItem').value;
+        const visibilidad = document.getElementById('visibilidadInsumo').value;
 
         if (!nombre || !categoriaId || !unidad || !stockMinimo) {
             showNotificationInventario('Completa todos los campos obligatorios', 'warning');
@@ -1053,7 +1053,7 @@ async function confirmarNuevoItem() {
             return;
         }
 
-        const btnConfirmar = document.getElementById('btnConfirmarNuevoItem');
+        const btnConfirmar = document.getElementById('btnConfirmarNuevoInsumo');
         btnConfirmar.disabled = true;
         btnConfirmar.innerHTML = '⏳ Creando...';
 
