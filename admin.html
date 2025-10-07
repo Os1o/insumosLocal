@@ -306,24 +306,12 @@
         </div>
     </div>
 
-
-    <!-- Scripts necesarios -->
-    <script>
-        function limpiarFiltros() {
-            document.getElementById('filtroEstadoAdmin').value = '';
-            document.getElementById('filtroTipoAdmin').value = '';
-            document.getElementById('filtroRecurso').value = '';
-            filtrarSolicitudesAdmin();
-            showNotificationAdmin('Filtros limpiados', 'success');
-        }
-    </script>
-
     <script src="js/api-adapter.js"></script>
 
     <!-- Chart.js para reportes -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- Scripts de módulos (estos también necesitarán migración) 
-    <script src="js/reporte.js"></script>-->
+    <!-- Scripts de módulos (estos también necesitarán migración) -->
+    <script src="js/reporte-migrado.js"></script>
     <script src="js/usuarios-migrado.js"></script>
 
     <!-- Script principal -->

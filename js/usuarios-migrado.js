@@ -703,215 +703,23 @@ function agregarEstilosUsuarios() {
     
     const estilos = document.createElement('style');
     estilos.id = 'estilos-usuarios';
-    estilos.textContent = `
-        /* Estilos copiados del original - solo la parte principal */
-        .modal-usuarios {
-            background: white;
-            border-radius: 12px;
-            width: 95%;
-            max-width: 1200px;
-            max-height: 80vh;
-            overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-        
-        .usuarios-controles {
-            padding: 1.5rem;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-        
-        .usuarios-stats {
-            display: flex;
-            gap: 2rem;
-        }
-        
-        .stat-item strong {
-            color: #2c3e50;
-            font-size: 1.2rem;
-        }
-        
-        .usuarios-lista {
-            padding: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .usuarios-tabla {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .usuarios-header {
-            display: grid;
-            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1.5fr;
-            gap: 1rem;
-            padding: 1rem;
-            background: #f8f9fa;
-            border-radius: 6px;
-            font-weight: 600;
-        }
-        
-        .usuario-fila {
-            display: grid;
-            grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr 1.5fr;
-            gap: 1rem;
-            padding: 1rem;
-            background: white;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            transition: all 0.2s;
-            align-items: center;
-        }
-        
-        .usuario-fila:hover {
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        .usuario-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        
-        .usuario-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #3498db;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
-        .rol-badge, .estado-badge, .token-badge {
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-        
-        .rol-usuario { background: #e3f2fd; color: #1565c0; }
-        .rol-admin { background: #fff3e0; color: #ef6c00; }
-        .rol-super-admin { background: #fce4ec; color: #c2185b; }
-        .estado-activo { background: #e8f5e8; color: #2e7d32; }
-        .estado-inactivo { background: #ffebee; color: #c62828; }
-        .token-disponible { background: #e8f5e8; color: #2e7d32; }
-        .token-usado { background: #fff3e0; color: #ef6c00; }
-        
-        .usuario-acciones {
-            display: flex;
-            gap: 0.25rem;
-        }
-        
-        .btn-accion-edit, .btn-accion-toggle, .btn-accion-token {
-            background: none;
-            border: 1px solid #dee2e6;
-            padding: 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .token-dropdown {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .dropdown-menu {
-            position: absolute;
-            bottom: 100%;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 1000;
-            min-width: 150px;
-            display: none;
-            margin-bottom: 2px;
-        }
-        
-        .token-dropdown:hover .dropdown-menu {
-            display: block;
-        }
-        
-        .dropdown-menu button {
-            display: block;
-            width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: none;
-            background: none;
-            text-align: left;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-        
-        .dropdown-menu button:hover {
-            background: #f8f9fa;
-        }
-    `;
     
-    document.head.appendChild(estilos);
+    // Cargar los estilos del artifact (todo el CSS que te di)
+    fetch('css/usuarios-mejorados.css')
+        .then(response => response.text())
+        .then(css => {
+            estilos.textContent = css;
+            document.head.appendChild(estilos);
+        })
+        .catch(() => {
+            // Si no existe el archivo, usar los estilos inline
+            estilos.textContent = `/* Pega aquí todo el CSS del artifact */`;
+            document.head.appendChild(estilos);
+        });
 }
 
 function agregarEstilosFormUsuario() {
-    if (document.getElementById('estilos-form-usuario')) return;
-    
-    const estilos = document.createElement('style');
-    estilos.id = 'estilos-form-usuario';
-    estilos.textContent = `
-        .modal-form-usuario {
-            max-width: 600px;
-            width: 90%;
-        }
-        
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e1e8ed;
-            border-radius: 6px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-        }
-        
-        .form-group small {
-            display: block;
-            margin-top: 0.25rem;
-            font-size: 0.85rem;
-            color: #6c757d;
-        }
-    `;
-    
-    document.head.appendChild(estilos);
+
 }
 
 console.log('✅ usuarios-migrado.js cargado correctamente - Usando API Local')

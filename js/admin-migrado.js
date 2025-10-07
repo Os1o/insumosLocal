@@ -714,4 +714,28 @@ window.addEventListener('error', function (e) {
     showNotificationAdmin('Error en la aplicación', 'error');
 });
 
+
+// ===================================
+// LIMPIAR FILTROS
+// ===================================
+function limpiarFiltros() {
+    // Resetear los selectores de filtro
+    const filtroEstado = document.getElementById('filtroEstadoAdmin');
+    const filtroTipo = document.getElementById('filtroTipoAdmin');
+    const filtroRecurso = document.getElementById('filtroRecurso');
+    
+    if (filtroEstado) filtroEstado.value = '';
+    if (filtroTipo) filtroTipo.value = '';
+    if (filtroRecurso) filtroRecurso.value = 'todos';
+    
+    // Mostrar todas las solicitudes sin filtros
+    solicitudesFiltradas = [...todasLasSolicitudes];
+    renderizarSolicitudesSimples(solicitudesFiltradas);
+    
+    // Notificación
+    showNotificationAdmin('Filtros limpiados - Mostrando todas las solicitudes', 'success');
+    
+    console.log('✅ Filtros limpiados');
+}
+
 console.log('✅ admin.js migrado cargado correctamente - Usando API Local');
