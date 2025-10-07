@@ -496,7 +496,7 @@ async function enviarSolicitud() {
         }
 
         // Si es solicitud extraordinaria, capturar campos específicos
-        if (tipoNormalizado === 'extraordinaria') {
+        /*if (tipoNormalizado === 'extraordinaria') {
             const motivoExtraordinaria = document.getElementById('motivo-extraordinaria')?.value;
             const fechaNecesidad = document.getElementById('fecha-necesidad')?.value;
             const prioridadExtraordinaria = document.getElementById('prioridad-extraordinaria')?.value;
@@ -521,7 +521,7 @@ async function enviarSolicitud() {
                 prioridad: prioridadExtraordinaria || 'alta',
                 fecha_captura: new Date().toISOString()
             };
-        }
+        }*/
 
         console.log('📤 Enviando solicitud a API local...');
 
