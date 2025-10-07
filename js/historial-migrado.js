@@ -433,13 +433,24 @@ async function confirmarRecibido() {
     try {
         console.log('✅ Marcando solicitud como recibida:', solicitudSeleccionada.id);
 
-        const { error } = await apiHistorial
-            .from('historial')
-            .insert({
+        // Llamar al endpoint PHP en lugar de Supabase directo
+        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/historial.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                action: 'marcar-recibido',
                 solicitud_id: solicitudSeleccionada.id
-            });
+            })
+        });
 
-        if (error) throw error;
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Error en el servidor');
+        }
 
         // Actualizar lista local de recibidos
         solicitudesRecibidas.push(solicitudSeleccionada.id);
@@ -457,10 +468,9 @@ async function confirmarRecibido() {
 
     } catch (error) {
         console.error('❌ Error marcando como recibido:', error);
-        showNotificationHistorial('Error al marcar como recibido. Intenta nuevamente.', 'error');
+        showNotificationHistorial('Error al marcar como recibido: ' + error.message, 'error');
     }
 }
-
 // ===================================
 // FUNCIONES DE UI
 // ===================================

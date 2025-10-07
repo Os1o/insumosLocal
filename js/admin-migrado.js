@@ -533,6 +533,108 @@ function validarStock(input, stockDisponible) {
         input.style.borderColor = '#ddd';
     }
 }
+function showNotification(message, type = 'info', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        z-index: 3000;
+        max-width: 400px;
+        animation: slideInRight 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    `;
+
+    // Colores según el tipo
+    const colors = {
+        success: { border: '#27ae60', background: '#d4edda', color: '#155724' },
+        error: { border: '#e74c3c', background: '#f8d7da', color: '#721c24' },
+        warning: { border: '#f39c12', background: '#fff3cd', color: '#856404' },
+        info: { border: '#3498db', background: '#d1ecf1', color: '#0c5460' }
+    };
+
+    const colorScheme = colors[type] || colors.info;
+    notification.style.borderLeftColor = colorScheme.border;
+    notification.style.backgroundColor = colorScheme.background;
+    notification.style.color = colorScheme.color;
+    notification.style.borderLeftWidth = '4px';
+
+    // Icono según el tipo
+    const icons = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+
+    notification.innerHTML = `
+        <span style="font-size: 1.2rem;">${icons[type] || icons.info}</span>
+        <span style="flex: 1;">${message}</span>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.7; padding: 0;">×</button>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove
+    if (duration > 0) {
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }
+        }, duration);
+    }
+
+    return notification;
+}
+
+async function procesarRenovacionMensual() {
+    try {
+        console.log('Iniciando proceso de renovación mensual...');
+
+        // Llamar al endpoint que hace todo el proceso
+        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/renovacion-mensual.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                action: 'ejecutar-proceso'
+            })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Error en el proceso');
+        }
+
+        console.log('Proceso completado:', result.data);
+        return true;
+
+    } catch (error) {
+        console.error('Error en proceso mensual:', error);
+        return false;
+    }
+}
+
+window.ejecutarProcesoMensual = async function () {
+    const resultado = await procesarRenovacionMensual();
+    if (resultado) {
+        showNotification('Proceso de renovación mensual completado exitosamente', 'success');
+        setTimeout(() => window.location.reload(), 2000);
+    } else {
+        showNotification('Error en el proceso de renovación mensual', 'error');
+    }
+};
+
 
 // ===================================
 // FILTRADO
