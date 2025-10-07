@@ -75,6 +75,10 @@ function cambiarTipoPeriodo() {
     }
 }
 
+function cambiarPeriodo() {
+    cambiarTipoPeriodo();
+}
+
 async function cargarAreas() {
     try {
         const response = await fetch(API_REPORTES_URL, {

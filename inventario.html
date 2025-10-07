@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Inventario - Sistema de Insumos</title>
+    <link rel="stylesheet" href="css/inventario.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/supadmin.css">
+    <link rel="stylesheet" href="css/header.css">
+    <meta name="description" content="Sistema de gestión de inventario de insumos">
+    <script>
+        (function () {
+            const session = sessionStorage.getItem('currentUser');
+            if (!session) {
+                window.location.replace('/login.html');
+                return;
+            }
+
+            try {
+                const user = JSON.parse(session);
+                if (user.rol !== 'super_admin' && user.rol !== 'admin') {
+                    alert('Solo los Administradores pueden acceder al inventario');
+                    window.location.replace('/admin.html');
+                    return;
+                }
+            } catch (error) {
+                window.location.replace('/login.html');
+                return;
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <!-- Header Admin se carga aquí -->
+    <div id="header-container"></div>
+
+    <main class="main-content admin-content">
+
+        <!-- Header de Inventario -->
+        <section class="inventario-header">
+            <div class="container">
+                <div class="inventario-title">
+                    <h1>📦 Gestión de Inventario</h1>
+                    <p>Control y administración del stock de insumos</p>
+                </div>
+
+                <div class="inventario-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalInsumos">0</span>
+                        <span class="stat-label">Total Insumos</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number critical" id="stockCritico">0</span>
+                        <span class="stat-label">Stock Crítico</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalActivos">0</span>
+                        <span class="stat-label">Insumos Activos</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Alertas de Stock Crítico -->
+        <section class="alertas-inventario" id="alertasInventario" style="display: none;">
+            <div class="container">
+                <div class="alert-card critical">
+                    <div class="alert-header">
+                        <h3>⚠️ Alertas de Stock Crítico</h3>
+                        <button class="alert-close" onclick="ocultarAlertas()">&times;</button>
+                    </div>
+                    <div class="alert-content" id="listaAlertas">
+                        <!-- Se cargan dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Controles de Inventario -->
+        <section class="inventario-controls">
+            <div class="container">
+                <div class="controls-wrapper">
+
+                    <!-- Filtros -->
+                    <!-- ✅ AGREGAR ESTA LÍNEA: Cambiar clase -->
+                    <div class="inventario-filtros">
+                        <!-- ✅ AGREGAR ESTE SELECTOR MANUALMENTE -->
+                        <div class="filtro-grupo">
+                            <label for="filtroTipoRecurso">Tipo de Recurso:</label>
+                            <select id="filtroTipoRecurso" onchange="cambiarTipoRecurso()">
+                                <option value="insumo">📦 Insumos</option>
+                                <option value="papeleria">📝 Papelería</option>
+                            </select>
+                        </div>
+
+                        <select id="filtroCategoria" onchange="filtrarInventario()">
+                            <option value="">📂 Todas las categorías</option>
+                            <!-- Se cargan dinámicamente -->
+                        </select>
+
+                        <select id="filtroEstadoStock" onchange="filtrarInventario()">
+                            <option value="">📊 Todos los estados</option>
+                            <option value="critico">🔴 Stock Crítico</option>
+                            <option value="bajo">🟡 Stock Bajo</option>
+                            <option value="normal">🟢 Stock Normal</option>
+                            <option value="alto">🔵 Stock Alto</option>
+                        </select>
+
+                        <select id="filtroVisibilidad" onchange="filtrarInventario()">
+                            <option value="">👁️ Todos</option>
+                            <option value="todos">👥 Todos los usuarios</option>
+                            <option value="solo_direccion">🏢 Solo Dirección</option>
+                            <option value="ninguno">🚫 No visible</option>
+                        </select>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="acciones-inventario">
+                        <button class="btn-admin-primary" id="btnNuevoItem" onclick="abrirModalNuevoItem('insumo')">
+                            📦 Nuevo Insumo
+                        </button>
+                        <button class="btn-admin-secondary" onclick="actualizarInventario()">
+                            🔄 Actualizar
+                        </button>
+                        <button class="btn-admin-secondary" onclick="exportarInventario()">
+                            📊 Exportar
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Lista Principal de Inventario -->
+        <section class="inventario-lista">
+            <div class="container">
+
+                <!-- Estado de carga -->
+                <div id="loadingInventario" class="loading-admin" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>Cargando inventario...</p>
+                </div>
+
+                <!-- Tabla de Inventario -->
+                <div id="tablaInventario" class="inventario-table-container" style="display: none;">
+                    <table class="inventario-table">
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Categoría</th>
+                                <th>Stock Actual</th>
+                                <th>Stock Mínimo</th>
+                                <th>Estado</th>
+                                <th>Unidad</th>
+                                <th>Visibilidad</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventarioTableBody">
+                            <!-- Se carga dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Estado sin inventario -->
+                <div id="sinInventario" class="no-solicitudes-admin" style="display: none;">
+                    <h3>📦 No hay inventario</h3>
+                    <p>No se encontraron insumos con los filtros aplicados.</p>
+                    <button class="btn-admin-primary" onclick="actualizarInventario()">
+                        🔄 Recargar Inventario
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Historial Reciente de Movimientos -->
+        <section class="historial-movimientos">
+            <div class="container">
+                <div class="historial-header">
+                    <h3>📋 Movimientos Recientes</h3>
+                    <button class="btn-admin-secondary btn-sm" onclick="verHistorialCompleto()">
+                        Ver Historial Completo
+                    </button>
+                </div>
+
+                <div class="movimientos-container" id="movimientosRecientes">
+                    <!-- Se cargan dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer se carga dinámicamente -->
+    <div id="footer-container"></div>
+
+    <!-- Modal de Nuevo Insumo -->
+    <div id="nuevoItemModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content restock-modal">
+            <div class="modal-header">
+                <h3>🆕 Nuevo Insumo</h3>
+                <button class="modal-close" onclick="cerrarModalNuevoItem()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="nuevoItemForm" class="restock-form">
+
+                    <!-- Información básica -->
+                    <div class="form-group">
+                        <label for="nombreInsumo">Nombre del insumo *</label>
+                        <input type="text" id="nombreInsumo" required placeholder="Ej: Hojas blancas tamaño carta">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="descripcionInsumo">Descripción</label>
+                        <textarea id="descripcionInsumo" rows="2"
+                            placeholder="Descripción opcional del insumo"></textarea>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="form-group">
+                            <label for="categoriaItem">Categoría *</label>
+                            <select id="categoriaItem" required>
+                                <option value="">Seleccionar categoría...</option>
+                                <!-- Se cargan dinámicamente -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="unidadInsumo">Unidad de medida *</label>
+                            <select id="unidadInsumo" required>
+                                <option value="">Seleccionar unidad...</option>
+                                <option value="pieza">Pieza</option>
+                                <option value="caja">Caja</option>
+                                <option value="paquete">Paquete</option>
+                                <option value="resma">Resma</option>
+                                <option value="litro">Litro</option>
+                                <option value="metro">Metro</option>
+                                <option value="rollo">Rollo</option>
+                                <option value="juego">Juego</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="form-group">
+                            <label for="stockInicial">Stock inicial</label>
+                            <input type="number" id="stockInicial" min="0" value="0" placeholder="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="stockMinimo">Stock mínimo de alerta *</label>
+                            <input type="number" id="stockMinimo" min="1" required placeholder="5" value="5">
+                        </div>
+                    </div>
+
+                    <!-- Control de visibilidad -->
+                    <div class="form-group">
+                        <label for="visibilidadInsumo">Visibilidad para usuarios *</label>
+                        <select id="visibilidadInsumo" required>
+                            <option value="todos">👥 Visible para todos los usuarios</option>
+                            <option value="solo_direccion">🏢 Solo visible para Dirección Jurídica</option>
+                            <!-- "ninguno" se mapeará a "todos" en el código -->
+                        </select>
+                        <small>Controla qué usuarios pueden ver este insumo al hacer solicitudes</small>
+                    </div>
+
+                </form>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-admin-secondary" onclick="cerrarModalNuevoItem()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-admin-primary" onclick="confirmarNuevoItem()"
+                        id="btnConfirmarNuevoInsumo">
+                        🆕 Crear Insumo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Restock -->
+    <div id="restockModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content restock-modal">
+            <div class="modal-header">
+                <h3>➕ Agregar Stock</h3>
+                <button class="modal-close" onclick="cerrarModalRestock()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="restockForm" class="restock-form">
+
+                    <!-- Selección de Insumo -->
+                    <div class="form-group">
+                        <label for="insumoSelect">Insumo a reabastecer:</label>
+                        <select id="insumoSelect" required onchange="actualizarInfoInsumo()">
+                            <option value="">Seleccionar insumo...</option>
+                            <!-- Se cargan dinámicamente -->
+                        </select>
+                    </div>
+
+                    <!-- Información actual del insumo -->
+                    <div class="insumo-info-card" id="insumoInfoCard" style="display: none;">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Stock actual:</span>
+                                <span class="info-value" id="stockActual">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Stock mínimo:</span>
+                                <span class="info-value" id="stockMinimo">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Unidad:</span>
+                                <span class="info-value" id="unidadMedida">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Visibilidad:</span>
+                                <span class="info-value" id="visibilidadActual">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cantidad a agregar -->
+                    <div class="form-group">
+                        <label for="cantidadAgregar">Cantidad a agregar:</label>
+                        <input type="number" id="cantidadAgregar" min="1" max="10000" required
+                            placeholder="Ingrese cantidad..." onchange="calcularNuevoStock()">
+                    </div>
+
+                    <!-- Nuevo stock calculado -->
+                    <div class="nuevo-stock-preview" id="nuevoStockPreview" style="display: none;">
+                        <p><strong>Nuevo stock será:</strong> <span id="nuevoStockCalculado">0</span></p>
+                    </div>
+
+                    <!-- Tipo de movimiento -->
+                    <div class="form-group">
+                        <label for="tipoMovimiento">Tipo de movimiento:</label>
+                        <select id="tipoMovimiento" required>
+                            <option value="">Seleccionar tipo...</option>
+                            <option value="restock">📦 Restock (Compra/Recepción)</option>
+                            <option value="ajuste">⚙️ Ajuste de Inventario</option>
+                            <option value="donacion">🎁 Donación Recibida</option>
+                        </select>
+                    </div>
+
+                    <!-- Motivo/Notas -->
+                    <div class="form-group">
+                        <label for="motivoRestock">Motivo/Notas:</label>
+                        <textarea id="motivoRestock" rows="3" placeholder="Describe el motivo del restock..."
+                            maxlength="500"></textarea>
+                    </div>
+
+                </form>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-admin-secondary" onclick="cerrarModalRestock()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-admin-primary" onclick="confirmarRestock()"
+                        id="btnConfirmarRestock">
+                        ➕ Agregar Stock
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Edición de Insumo -->
+    <div id="editarInsumoModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content restock-modal">
+            <div class="modal-header">
+                <h3>✏️ Editar Insumo</h3>
+                <button class="modal-close" onclick="cerrarModalEditarInsumo()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editarInsumoForm" class="restock-form">
+                    <input type="hidden" id="editarInsumoId">
+
+                    <!-- Información básica -->
+                    <div class="form-group">
+                        <label for="editarNombre">Nombre del insumo *</label>
+                        <input type="text" id="editarNombre" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editarDescripcion">Descripción</label>
+                        <textarea id="editarDescripcion" rows="2"></textarea>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="form-group">
+                            <label for="editarCategoria">Categoría *</label>
+                            <select id="editarCategoria" required>
+                                <option value="">Seleccionar categoría...</option>
+                                <!-- Se cargan dinámicamente -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editarUnidad">Unidad de medida *</label>
+                            <select id="editarUnidad" required>
+                                <option value="">Seleccionar unidad...</option>
+                                <option value="pieza">Pieza</option>
+                                <option value="caja">Caja</option>
+                                <option value="paquete">Paquete</option>
+                                <option value="resma">Resma</option>
+                                <option value="L">Litro</option>
+                                <option value="metro">Metro</option>
+                                <option value="rollo">Rollo</option>
+                                <option value="juego">Juego</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="form-group">
+                            <label for="editarStockMinimo">Stock mínimo de alerta *</label>
+                            <input type="number" id="editarStockMinimo" min="1" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="editarActivo">Estado</label>
+                            <select id="editarActivo">
+                                <option value="true">✅ Activo</option>
+                                <option value="false">❌ Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Control de visibilidad -->
+                    <div class="form-group">
+                        <label for="editarVisibilidad">Visibilidad para usuarios</label>
+                        <select id="editarVisibilidad" required>
+                            <option value="todos">👥 Visible para todos los usuarios</option>
+                            <option value="solo_direccion">🏢 Solo visible para Dirección Jurídica</option>
+                            <option value="ninguno">🚫 No visible (solo administradores)</option>
+                        </select>
+                        <small>Controla qué usuarios pueden ver este insumo al hacer solicitudes</small>
+                    </div>
+
+                </form>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-admin-secondary" onclick="cerrarModalEditarInsumo()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn-admin-primary" onclick="confirmarEdicionInsumo()"
+                        id="btnConfirmarEdicion">
+                        💾 Guardar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Historial Completo -->
+    <div id="historialModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content historial-modal">
+            <div class="modal-header">
+                <h3>📋 Historial de Movimientos</h3>
+                <button class="modal-close" onclick="cerrarHistorialModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Filtros del historial -->
+                <div class="historial-filtros">
+                    <select id="filtroTipoMovimiento">
+                        <option value="">Todos los tipos</option>
+                        <option value="entrega">Entregas</option>
+                        <option value="restock">Restock</option>
+                        <option value="ajuste">Ajustes</option>
+                    </select>
+                    <input type="date" id="filtroFechaDesde" placeholder="Fecha desde">
+                    <input type="date" id="filtroFechaHasta" placeholder="Fecha hasta">
+                </div>
+
+                <div id="historialCompleto" class="historial-completo">
+                    <!-- Se carga dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <!-- Scripts necesarios -->
+    <script src="js/api-adapter.js"></script>
+
+    <script src="js/inventario-migrado.js"></script>
+
+</body>
+
+</html>
