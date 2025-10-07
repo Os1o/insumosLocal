@@ -424,16 +424,25 @@ async function enviarSolicitud() {
         const session = sessionStorage.getItem('currentUser');
         const user = JSON.parse(session);
 
-        // Normalizar tipo de solicitud
-        function normalizarTipoSolicitud(tipo) {
-            if (tipo.includes('ordinaria')) return 'ordinaria';
-            if (tipo.includes('extraordinaria')) return 'extraordinaria';
-            if (tipo.includes('juntas')) return 'juntas';
-            return tipo;
+        let tipoNormalizado;
+
+        // Verificar en orden específico
+        if (currentSolicitudType.includes('juntas')) {
+            tipoNormalizado = 'juntas';
+        } else if (currentSolicitudType.includes('extraordinaria')) {
+            tipoNormalizado = 'extraordinaria';
+        } else if (currentSolicitudType.includes('ordinaria')) {
+            tipoNormalizado = 'ordinaria';
+        } else {
+            tipoNormalizado = currentSolicitudType;
         }
 
+        console.log('🎯 TIPO DETERMINADO:', {
+            original: currentSolicitudType,
+            normalizado: tipoNormalizado
+        });
+
         // Determinar qué token se usará
-        const tipoNormalizado = normalizarTipoSolicitud(currentSolicitudType);
         let tokenTipoUsado = 'ninguno';
         let consumeToken = false;
 
