@@ -532,11 +532,15 @@ async function enviarSolicitud() {
             recurso_tipo: recursoActual,
             estado: 'pendiente',
             total_items: carritoItems.length,
-            token_usado: consumeToken,
-            token_tipo_usado: tokenTipoUsado,
-            datos_junta: datosJunta,
-            ...(datosExtraordinaria && { datos_extraordinaria: datosExtraordinaria })
+            token_usado: consumeToken ? true : false,  // ← CORREGIDO: boolean explícito
+            token_tipo_usado: tokenTipoUsado || null,  // ← CORREGIDO: null si está vacío
+            datos_junta: datosJunta
         };
+
+        // Agregar datos_extraordinaria solo si existe
+        if (datosExtraordinaria) {
+            solicitudData.datos_extraordinaria = datosExtraordinaria;
+        }
 
         console.log('Datos de solicitud:', solicitudData);
 
