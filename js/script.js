@@ -544,6 +544,11 @@ async function enviarSolicitud() {
 
         console.log('Datos de solicitud:', solicitudData);
 
+        console.log('📤 === DATOS QUE SE ENVÍAN ===');
+        console.log('solicitudData completo:', JSON.stringify(solicitudData, null, 2));
+        console.log('token_usado:', solicitudData.token_usado, 'tipo:', typeof solicitudData.token_usado);
+        console.log('token_tipo_usado:', solicitudData.token_tipo_usado, 'tipo:', typeof solicitudData.token_tipo_usado);
+
         const { data: solicitud, error: solError } = await supabase
             .from('solicitudes')
             .insert(solicitudData);

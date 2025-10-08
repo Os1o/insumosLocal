@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Endpoint de solicitudes
  * Maneja creación, lectura y actualización de solicitudes
@@ -16,34 +17,36 @@ $action = $requestData['action'] ?? '';
 try {
     $database = new Database();
     $conn = $database->getConnection();
-    
-    switch($action) {
-        
+
+    switch ($action) {
+
         case 'insert':
             handleInsertSolicitud($conn, $requestData);
             break;
-            
+
         case 'insert-detalles':
             handleInsertDetalles($conn, $requestData);
             break;
-            
+
         case 'get-recibidos':
             handleGetRecibidos($conn, $requestData);
             break;
-            
+
         case 'insert-token-renovacion':
             handleInsertTokenRenovacion($conn, $requestData);
             break;
-            
+
         default:
             sendResponse(false, null, 'Acción no válida', 400);
     }
-    
-} catch(Exception $e) {
+} catch (Exception $e) {
     logError('Error en solicitudes.php: ' . $e->getMessage());
     sendResponse(false, null, 'Error del servidor: ' . $e->getMessage(), 500);
 }
 
+/**
+ * Crear nueva solicitud
+ */
 /**
  * Crear nueva solicitud
  */
@@ -64,6 +67,28 @@ function handleInsertSolicitud($conn, $requestData) {
         sendResponse(false, null, 'Campos requeridos: ' . implode(', ', $missing), 400);
     }
     
+    // ⭐ CORRECCIÓN: Convertir token_usado a boolean real
+    $tokenUsado = false;
+    if (isset($data['token_usado'])) {
+        if (is_bool($data['token_usado'])) {
+            $tokenUsado = $data['token_usado'];
+        } else if (is_string($data['token_usado'])) {
+            $tokenUsado = ($data['token_usado'] === 'true' || $data['token_usado'] === '1');
+        } else {
+            $tokenUsado = (bool)$data['token_usado'];
+        }
+    }
+    
+    // ⭐ CORRECCIÓN CRÍTICA: token_tipo_usado debe ser NULL si es vacío o "ninguno"
+    $tokenTipoUsado = null;
+    if (isset($data['token_tipo_usado'])) {
+        $valor = trim($data['token_tipo_usado']);
+        // Solo aceptar valores válidos: ordinario, extraordinario
+        if ($valor !== '' && $valor !== 'ninguno' && $valor !== null) {
+            $tokenTipoUsado = $valor;
+        }
+    }
+    
     // Preparar datos para inserción
     $sql = "
         INSERT INTO solicitudes (
@@ -80,17 +105,25 @@ function handleInsertSolicitud($conn, $requestData) {
     
     $stmt = $conn->prepare($sql);
     
-    $stmt->execute([
-        'usuario_id' => $data['usuario_id'],
-        'tipo' => $data['tipo'],
-        'recurso_tipo' => $data['recurso_tipo'] ?? 'insumo',
-        'estado' => $data['estado'],
-        'total_items' => $data['total_items'],
-        'token_usado' => $data['token_usado'] ?? false,
-        'token_tipo_usado' => $data['token_tipo_usado'] ?? null,
-        'datos_junta' => isset($data['datos_junta']) ? json_encode($data['datos_junta']) : null,
-        'datos_extraordinaria' => isset($data['datos_extraordinaria']) ? json_encode($data['datos_extraordinaria']) : null
-    ]);
+    // ⭐ BIND EXPLÍCITO para token_tipo_usado
+    $stmt->bindValue(':usuario_id', $data['usuario_id']);
+    $stmt->bindValue(':tipo', $data['tipo']);
+    $stmt->bindValue(':recurso_tipo', $data['recurso_tipo'] ?? 'insumo');
+    $stmt->bindValue(':estado', $data['estado']);
+    $stmt->bindValue(':total_items', (int)$data['total_items'], PDO::PARAM_INT);
+    $stmt->bindValue(':token_usado', $tokenUsado, PDO::PARAM_BOOL);
+    
+    // ⭐ CRÍTICO: Si es NULL, usar PDO::PARAM_NULL
+    if ($tokenTipoUsado === null) {
+        $stmt->bindValue(':token_tipo_usado', null, PDO::PARAM_NULL);
+    } else {
+        $stmt->bindValue(':token_tipo_usado', $tokenTipoUsado, PDO::PARAM_STR);
+    }
+    
+    $stmt->bindValue(':datos_junta', isset($data['datos_junta']) ? json_encode($data['datos_junta']) : null);
+    $stmt->bindValue(':datos_extraordinaria', isset($data['datos_extraordinaria']) ? json_encode($data['datos_extraordinaria']) : null);
+    
+    $stmt->execute();
     
     $solicitud = $stmt->fetch();
     
@@ -100,15 +133,16 @@ function handleInsertSolicitud($conn, $requestData) {
 /**
  * Insertar detalles de solicitud (items del carrito)
  */
-function handleInsertDetalles($conn, $requestData) {
+function handleInsertDetalles($conn, $requestData)
+{
     SessionManager::requireAuth();
-    
+
     $data = $requestData['data'] ?? null;
-    
+
     if (!$data || !is_array($data)) {
         sendResponse(false, null, 'Datos de detalles requeridos como array', 400);
     }
-    
+
     // Preparar statement para inserción múltiple
     $sql = "
         INSERT INTO solicitud_detalles (
@@ -117,11 +151,11 @@ function handleInsertDetalles($conn, $requestData) {
             :solicitud_id, :insumo_id, :papeleria_id, :cantidad_solicitada
         )
     ";
-    
+
     $stmt = $conn->prepare($sql);
-    
+
     $conn->beginTransaction();
-    
+
     try {
         foreach ($data as $detalle) {
             $stmt->execute([
@@ -131,10 +165,9 @@ function handleInsertDetalles($conn, $requestData) {
                 'cantidad_solicitada' => $detalle['cantidad_solicitada']
             ]);
         }
-        
+
         $conn->commit();
         sendResponse(true, ['inserted' => count($data)]);
-        
     } catch (Exception $e) {
         $conn->rollBack();
         throw $e;
@@ -144,47 +177,49 @@ function handleInsertDetalles($conn, $requestData) {
 /**
  * Obtener solicitudes recibidas
  */
-function handleGetRecibidos($conn, $requestData) {
+function handleGetRecibidos($conn, $requestData)
+{
     SessionManager::requireAuth();
-    
+
     $filters = $requestData['filters'] ?? [];
-    
+
     $sql = "
         SELECT * FROM solicitudes_recibidos
         WHERE 1=1
     ";
-    
+
     $params = [];
-    
+
     if (isset($filters['solicitud_id'])) {
         $sql .= " AND solicitud_id = :solicitud_id";
         $params['solicitud_id'] = $filters['solicitud_id']['value'];
     }
-    
+
     if (isset($filters['usuario_id'])) {
         $sql .= " AND usuario_id = :usuario_id";
         $params['usuario_id'] = $filters['usuario_id']['value'];
     }
-    
+
     $stmt = $conn->prepare($sql);
     $stmt->execute($params);
     $recibidos = $stmt->fetchAll();
-    
+
     sendResponse(true, $recibidos);
 }
 
 /**
  * Insertar registro de renovación de token
  */
-function handleInsertTokenRenovacion($conn, $requestData) {
+function handleInsertTokenRenovacion($conn, $requestData)
+{
     SessionManager::requireAuth();
-    
+
     $data = $requestData['data'] ?? null;
-    
+
     if (!$data) {
         sendResponse(false, null, 'Datos de renovación requeridos', 400);
     }
-    
+
     $sql = "
         INSERT INTO tokens_renovacion (
             usuario_id, mes_ano, recurso_tipo, token_tipo,
@@ -196,9 +231,9 @@ function handleInsertTokenRenovacion($conn, $requestData) {
             NOW()
         )
     ";
-    
+
     $stmt = $conn->prepare($sql);
-    
+
     $stmt->execute([
         'usuario_id' => $data['usuario_id'],
         'mes_ano' => $data['mes_ano'],
@@ -208,6 +243,6 @@ function handleInsertTokenRenovacion($conn, $requestData) {
         'marco_recibido' => $data['marco_recibido'] ?? false,
         'token_renovado' => $data['token_renovado'] ?? false
     ]);
-    
+
     sendResponse(true, ['success' => true]);
 }
