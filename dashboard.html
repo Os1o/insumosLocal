@@ -21,47 +21,38 @@
                 <h1>Sistema de Solicitudes</h1>
                 <p>Gestiona eficientemente tus solicitudes de insumos y papelería</p>
 
-                <!-- SELECTOR DE TIPO DE RECURSO (NUEVO) -->
-                <div style="display: flex; gap: 1.5rem; justify-content: center; margin-top: 2rem; flex-wrap: wrap;">
-
-                    <!-- Botón INSUMOS -->
-                    <button id="btn-insumos" onclick="seleccionarRecurso('insumo')"
-                        style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem 2rem; background: linear-gradient(135deg, #657153, #8aaa79); color: white; border: none; border-radius: 12px; cursor: pointer; min-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); transition: all 0.3s ease;">
-                        <span style="font-size: 2rem;">📦</span>
-                        <div style="text-align: left;">
-                            <h3 style="margin: 0; font-size: 1.2rem;">INSUMOS</h3>
-                            <small id="token-insumo-display" style="opacity: 0.9;">Token: -</small>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">Bebidas, tecnología,
-                                limpieza</p>
+                <!-- SELECTOR DE TIPO DE RECURSO -->
+                <div class="recurso-selector">
+                    <button id="btn-insumos" class="recurso-btn">
+                        <span class="recurso-icon">📦</span>
+                        <div class="recurso-info">
+                            <h3>INSUMOS</h3>
+                            <small id="token-insumo-display">Token: -</small>
+                            <p>Bebidas, tecnología, limpieza</p>
                         </div>
                     </button>
 
-                    <!-- Botón PAPELERÍA -->
-                    <button id="btn-papeleria" onclick="seleccionarRecurso('papeleria')"
-                        style="display: flex; align-items: center; gap: 1rem; padding: 1.5rem 2rem; background: white; color: #657153; border: 2px solid #b7b6c2; border-radius: 12px; cursor: pointer; min-width: 300px; transition: all 0.3s ease;">
-                        <span style="font-size: 2rem;">📝</span>
-                        <div style="text-align: left;">
-                            <h3 style="margin: 0; font-size: 1.2rem;">PAPELERÍA</h3>
-                            <div style="margin: 0.25rem 0;">
-                                <small id="token-papeleria-ordinario-display"
-                                    style="opacity: 0.9; display: block; font-size: 0.875rem;">Ordinario: -</small>
+                    <button id="btn-papeleria" class="recurso-btn">
+                        <span class="recurso-icon papeleria-icon">📝</span>
+                        <div class="recurso-info">
+                            <h3 class="papeleria-title">PAPELERÍA</h3>
+                            <div class="tokens-papeleria">
+                                <small id="token-papeleria-ordinario-display" class="token-display-text">Ordinario:
+                                    -</small>
                                 <small id="token-papeleria-extraordinario-display"
-                                    style="opacity: 0.9; display: block; font-size: 0.875rem;">Extraordinario: -</small>
+                                    class="token-display-text">Extraordinario: -</small>
                             </div>
-                            <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; opacity: 0.8;">Hojas, folders, útiles
-                            </p>
+                            <p class="papeleria-desc">Hojas, folders, útiles</p>
                         </div>
                     </button>
-
                 </div>
-
             </div>
         </section>
-
+        
         <!-- Solicitudes Cards de INSUMOS (tu sección original) -->
         <section class="solicitudes-section" id="seccion-insumos">
             <div class="container">
-                <h2 style="text-align: center; margin-bottom: 2rem; color: #657153;">Tipos de Solicitud de Insumos</h2>
+                <h2 style="text-align: center; margin-bottom: 2rem; color: #00675B;">Tipos de Solicitud de Insumos</h2>
                 <div class="solicitudes-grid">
 
                     <!-- Solicitud Mensual/Ordinaria -->

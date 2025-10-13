@@ -2050,6 +2050,7 @@ function validarTokenParaSolicitud(tipo) {
 }
 
 // Función para seleccionar tipo de recurso (actualizada)
+/*
 function seleccionarRecurso(tipo) {
     recursoActual = tipo;
 
@@ -2090,7 +2091,118 @@ function seleccionarRecurso(tipo) {
 
     // Actualizar estado de botones según tokens
     actualizarEstadoBotonesSolicitud();
+}*/
+
+
+function seleccionarRecurso(tipo) {
+    recursoActual = tipo;
+
+    // Actualizar botones - con verificación de existencia
+    const btnInsumos = document.getElementById('btn-insumos');
+    const btnPapeleria = document.getElementById('btn-papeleria');
+
+    // Solo proceder si los botones existen en esta página
+    if (btnInsumos && btnPapeleria) {
+        // Remover clase active de todos los botones primero
+        btnInsumos.classList.remove('active');
+        btnPapeleria.classList.remove('active');
+
+        // Activar el botón seleccionado
+        if (tipo === 'insumo') {
+            btnInsumos.classList.add('active');
+        } else {
+            btnPapeleria.classList.add('active');
+        }
+    }
+
+    // Manejar secciones - con verificación de existencia
+    const seccionInsumos = document.getElementById('seccion-insumos');
+    const seccionPapeleria = document.getElementById('seccion-papeleria');
+
+    if (seccionInsumos && seccionPapeleria) {
+        if (tipo === 'insumo') {
+            mostrarSeccion('seccion-insumos');
+            ocultarSeccion('seccion-papeleria');
+        } else {
+            mostrarSeccion('seccion-papeleria');
+            ocultarSeccion('seccion-insumos');
+        }
+    }
+
+    // Actualizar estado de botones según tokens (si la función existe)
+    if (typeof actualizarEstadoBotonesSolicitud === 'function') {
+        actualizarEstadoBotonesSolicitud();
+    }
+    
+    console.log('Recurso seleccionado:', tipo);
 }
+
+// Funciones auxiliares (mantener igual)
+function mostrarSeccion(id) {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+        elemento.style.display = 'block';
+    }
+}
+
+function ocultarSeccion(id) {
+    const elemento = document.getElementById(id);
+    if (elemento) {
+        elemento.style.display = 'none';
+    }
+}
+
+// Inicialización más robusta
+document.addEventListener('DOMContentLoaded', function() {
+    // Solo configurar event listeners si los elementos existen
+    const btnInsumos = document.getElementById('btn-insumos');
+    const btnPapeleria = document.getElementById('btn-papeleria');
+    
+    if (btnInsumos && btnPapeleria) {
+        btnInsumos.addEventListener('click', function() {
+            seleccionarRecurso('insumo');
+        });
+        
+        btnPapeleria.addEventListener('click', function() {
+            seleccionarRecurso('papeleria');
+        });
+        
+        // Seleccionar insumos por defecto solo si estamos en la página principal
+        seleccionarRecurso('insumo');
+    } else {
+        console.log('Selector de recursos no encontrado en esta página');
+    }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Función expandida para abrir solicitud (actualizada)
 function abrirSolicitud(tipo) {

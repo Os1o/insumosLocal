@@ -28,19 +28,19 @@
     /* Colores derivados */
     --color-white: #ffffff;
     --color-bg-white: #fafbfc;
-    --color-text-dark: #1B1B1B;
-    /* PANTONE Neutral Black C */
+    --color-text-dark: #1B1B1B; /* PANTONE Neutral Black C */
     --color-success: #27ae60;
-    --color-warning: #AE843F;
-    /* PANTONE 1255 C (Advertencia/Oro) */
-    --color-danger: #A82245;
-    /* PANTONE 7420 C (Vino/Rojo Institucional) */
+    --color-warning: #AE843F; /* PANTONE 1255 C (Advertencia/Oro) */
+    --color-danger: #A82245; /* PANTONE 7420 C (Vino/Rojo Institucional) */
     --color-info: #3498db;
-
+    
     /* Sombras - Ajustar el color de base (rgba) al nuevo Primary (#00675B) */
     --shadow-sm: 0 2px 8px rgba(0, 103, 91, 0.08);
     --shadow-md: 0 4px 20px rgba(0, 103, 91, 0.12);
     --shadow-lg: 0 8px 32px rgba(0, 103, 91, 0.16);
+
+    /* ... (resto de variables) ... */
+
 
     /* Espaciado */
     --spacing-xs: 0.5rem;
@@ -147,12 +147,14 @@ body {
 
 .nav-link:hover {
     color: var(--color-primary);
-    background: rgba(101, 113, 83, 0.08);
+    background: rgba(0, 103, 91, 0.08);
+    /* Nuevo rgba de #00675B */
 }
 
 .nav-link.active {
     color: var(--color-primary);
-    background: rgba(101, 113, 83, 0.12);
+    background: rgba(0, 103, 91, 0.12);
+    /* Nuevo rgba de #00675B */
 }
 
 /* Sección de Usuario */
@@ -380,9 +382,10 @@ body {
 .hero-content h1 {
     font-size: 3rem;
     font-weight: 700;
-    color: var(--color-primary);
+    color: var(--color-primary); /* Se actualizará a #00675B */
     margin-bottom: var(--spacing-sm);
-    text-shadow: 0 2px 4px rgba(101, 113, 83, 0.1);
+    /* Ajustar el rgba de la sombra al nuevo Primary (#00675B) */
+    text-shadow: 0 2px 4px rgba(0, 103, 91, 0.1); 
 }
 
 .hero-content p {
@@ -425,6 +428,7 @@ body {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg, transparent, rgba(138, 170, 121, 0.1), transparent);
+    /* Nuevo rgba de #F8E797 */
     transition: left 0.6s ease;
 }
 
@@ -435,7 +439,7 @@ body {
 .solicitud-card:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-lg);
-    border-color: var(--color-accent);
+    border-color: var(--color-second);
 }
 
 .card-icon {
@@ -733,7 +737,7 @@ body {
 }
 
 .contact-item svg {
-    color: var(--color-accent);
+    color: var(--color-second);
     flex-shrink: 0;
     width: 18px;
     height: 18px;
@@ -796,7 +800,7 @@ body {
     display: block;
     font-size: 1.8rem;
     font-weight: bold;
-    color: var(--color-accent);
+    color: var(--color-second);
     margin-bottom: var(--spacing-xs);
 }
 
@@ -921,7 +925,8 @@ body {
     background: var(--color-accent);
     border-color: var(--color-accent);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(138, 170, 121, 0.3);
+    box-shadow: 0 4px 12px rgba(248, 231, 151, 0.5);
+    /* Nuevo rgba de #F8E797 */
 }
 
 .footer-btn svg {
@@ -1181,7 +1186,7 @@ body {
 
 /* Info del usuario en modal */
 .usuario-info-card {
-    background: linear-gradient(135deg, #657153, #8aaa79);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
     color: white;
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -1250,9 +1255,9 @@ body {
 }
 
 .categoria-tab.active {
-    background: #657153;
+    background: var(--color-primary);
     color: white;
-    border-color: #657153;
+    border-color: var(--color-primary);
 }
 
 .categoria-icon {
@@ -1298,7 +1303,7 @@ body {
 .insumo-nombre {
     display: block;
     font-weight: 500;
-    color: #657153;
+    color: var(--color-primary);
     margin-bottom: 0.25rem;
 }
 
@@ -1326,7 +1331,7 @@ body {
 }
 
 .btn-cantidad:hover {
-    background: #657153;
+    background: var(--color-primary);
     color: white;
 }
 
@@ -1342,7 +1347,7 @@ body {
 
 .btn-agregar {
     padding: 0.5rem 1rem;
-    background: #8aaa79;
+    background: #00675B;
     color: white;
     border: none;
     border-radius: 4px;
@@ -1352,7 +1357,7 @@ body {
 }
 
 .btn-agregar:hover {
-    background: #657153;
+    background: #07433c;
     transform: translateY(-1px);
 }
 
@@ -1372,7 +1377,7 @@ body {
 }
 
 .carrito-resumen h4 {
-    color: #657153;
+    color: var(--color-primary);
     margin-bottom: 1rem;
     font-size: 1.1rem;
 }
@@ -1420,7 +1425,7 @@ body {
     padding-top: 0.75rem;
     border-top: 1px solid #d1d5de;
     font-weight: 600;
-    color: #657153;
+    color: var(--color-primary);
 }
 
 .carrito-vacio {
@@ -1439,7 +1444,7 @@ body {
    =================================== */
 
 .page-header {
-    background: linear-gradient(135deg, #657153, #8aaa79);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
@@ -1645,8 +1650,9 @@ body {
 .loading-spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #d1d5de;
-    border-top: 3px solid #657153;
+    border: 3px solid var(--color-bg-light);
+    border-top: 3px solid var(--color-primary);
+    /* Usa la variable */
     border-radius: 50%;
     animation: spin 1s linear infinite;
     margin: 0 auto 1rem;
@@ -1818,10 +1824,11 @@ body {
     border-radius: var(--border-radius-md);
     cursor: pointer;
     transition: var(--transition-normal);
-    min-width: 280px;
+    min-width: 300px; /* Unificar a un solo valor para ambos botones */
     max-width: 350px;
     text-decoration: none;
     font-family: inherit;
+    color: var(--color-text-dark);
 }
 
 .recurso-btn:hover {
@@ -1832,9 +1839,38 @@ body {
 
 .recurso-btn.active {
     border-color: var(--color-primary);
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    color: var(--color-white);
+    /* Usar Primary y Accent */
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
+    color: var(--color-white); /* Asegura que el color de texto base del botón sea blanco */
+    /* Ajusta la sombra para que use el nuevo Primary (#00675B) */
+    box-shadow: 0 4px 12px rgba(0, 103, 91, 0.2); 
 }
+
+
+/* **CORRECCIÓN CLAVE:** Forzar el color blanco para todos los elementos internos en estado activo */
+.recurso-btn.active .recurso-icon,
+.recurso-btn.active .recurso-info h3, 
+.recurso-btn.active .recurso-info p, 
+.recurso-btn.active .tokens-papeleria small,
+.recurso-btn.active .token-display small {
+    color: var(--color-white) !important; /* Usamos !important para anular cualquier otra regla */
+    opacity: 1 !important; /* Asegura que la opacidad del texto secundario no lo haga invisible */
+}
+
+/* **NUEVA REGLA CLAVE:** Asegurar que los títulos no activos sean Primary y los íconos también */
+.recurso-btn:not(.active) .recurso-info h3,
+.recurso-btn:not(.active) .recurso-icon {
+    color: var(--color-primary); 
+}
+
+/* Ajuste para que el texto secundario (descripción) en el botón NO activo sea gris */
+.recurso-btn:not(.active) .recurso-info p,
+.recurso-btn:not(.active) .tokens-papeleria small,
+.recurso-btn:not(.active) .token-display small {
+    color: var(--color-text-secondary); 
+    opacity: 1; 
+}
+
 
 .recurso-icon {
     font-size: 2.5rem;
@@ -1890,8 +1926,8 @@ body {
 }
 
 .recurso-btn.active .token-value {
-    background: rgba(255, 255, 255, 0.3);
-    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-dark); /* Color oscuro sobre fondo claro (blanco opaco) */
 }
 
 .token-value.agotado {
@@ -1901,7 +1937,7 @@ body {
 
 .recurso-btn.active .token-value.agotado {
     background: rgba(255, 255, 255, 0.2);
-    color: #ffcccb;
+    color: var(--color-danger); /* El rojo institucional */
 }
 
 /* Sección de tipos de papelería (reutiliza clases existentes) */
@@ -2079,7 +2115,7 @@ body {
 }
 
 .solicitud-header {
-    background: #657153;
+    background: var(--color-primary);
     color: white;
     padding: 0.75rem 1rem;
     margin: 0;
