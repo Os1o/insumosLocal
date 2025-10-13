@@ -1,13 +1,26 @@
 /* ===================================
    HEADER ADMIN - CSS SEPARADO
    Diseño limpio y profesional para admin.html
+   COLORES INSTITUCIONALES APLICADOS: #00675B, #F8E797, #A82245
    =================================== */
+
+/* Definición de variables institucionales (para este componente) */
+:root {
+    --color-primary: #00675B; /* Verde Institucional */
+    --color-accent: #F8E797; /* Amarillo Acento */
+    --color-danger: #A82245; /* Rojo/Vino Peligro */
+    --color-white: #ffffff;
+    --color-text-dark: #2c3e50;
+    --color-bg-light: #f8f9fa;
+}
 
 /* Header principal */
 .header {
-    background: linear-gradient(135deg, #34495e, #2c3e50);
-    color: white;
-    box-shadow: 0 2px 12px rgba(52, 73, 94, 0.15);
+    /* Gradiente con tonos de verde institucional */
+    background: linear-gradient(135deg, var(--color-primary), #004F47); 
+    color: var(--color-white);
+    /* Sombra basada en el color primario */
+    box-shadow: 0 2px 12px rgba(0, 103, 91, 0.15); 
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -39,8 +52,9 @@
 }
 
 .logo-icon {
-    background: rgba(52, 152, 219, 0.15);
-    border: 1px solid rgba(52, 152, 219, 0.3);
+    /* Fondo transparente basado en el color primario */
+    background: rgba(0, 103, 91, 0.15); 
+    border: 1px solid rgba(0, 103, 91, 0.3);
     padding: 10px;
     border-radius: 10px;
     display: flex;
@@ -50,19 +64,20 @@
 }
 
 .logo-icon:hover {
-    background: rgba(52, 152, 219, 0.25);
+    background: rgba(0, 103, 91, 0.25);
     transform: scale(1.05);
 }
 
 .logo-icon svg {
-    color: #3498db;
+    /* Icono en color de acento */
+    color: var(--color-accent); 
 }
 
 .logo-text h1 {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
-    color: #ecf0f1;
+    color: var(--color-white);
     letter-spacing: -0.5px;
 }
 
@@ -102,15 +117,17 @@
 
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.1);
-    color: white;
+    color: var(--color-white);
     border-color: rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
 }
 
 .nav-link.active {
-    background: rgba(52, 152, 219, 0.2);
-    color: #3498db;
-    border-color: rgba(52, 152, 219, 0.3);
+    /* Fondo activo en color primario con transparencia */
+    background: rgba(0, 103, 91, 0.2); 
+    /* Texto activo en color de acento para mayor visibilidad */
+    color: var(--color-accent); 
+    border-color: rgba(0, 103, 91, 0.3);
     font-weight: 600;
 }
 
@@ -129,7 +146,7 @@
 .user-button {
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    color: white;
+    color: var(--color-white);
     padding: 0.75rem 1.25rem;
     border-radius: 10px;
     cursor: pointer;
@@ -166,7 +183,7 @@
     position: absolute;
     top: calc(100% + 12px);
     right: 0;
-    background: white;
+    background: var(--color-white);
     border: 1px solid #e1e5e9;
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
@@ -190,11 +207,11 @@
     align-items: center;
     gap: 10px;
     padding: 0.75rem 1.25rem;
-    color: #2c3e50;
+    color: var(--color-text-dark);
     text-decoration: none;
     transition: all 0.2s ease;
     font-size: 0.9rem;
-    border-bottom: 1px solid #f8f9fa;
+    border-bottom: 1px solid var(--color-bg-light);
 }
 
 .user-dropdown a:last-child {
@@ -202,24 +219,25 @@
 }
 
 .user-dropdown a:hover {
-    background: #f8f9fa;
-    color: #2c3e50;
+    background: var(--color-bg-light);
+    color: var(--color-primary); /* Texto de hover en Primario */
     padding-left: 1.5rem;
 }
 
 .user-dropdown a:hover svg {
-    color: #3498db;
+    color: var(--color-primary); /* Icono de hover en Primario */
     transform: scale(1.1);
 }
 
 /* Logout específico */
 .user-dropdown a[onclick*="logout"]:hover {
-    background: #fff5f5;
-    color: #e74c3c;
+    /* Fondo sutil basado en el color de peligro */
+    background: rgba(168, 34, 69, 0.05); 
+    color: var(--color-danger);
 }
 
 .user-dropdown a[onclick*="logout"]:hover svg {
-    color: #e74c3c;
+    color: var(--color-danger);
 }
 
 /* ===================================
@@ -303,7 +321,7 @@
     transform: translateX(-50%);
     width: 20px;
     height: 3px;
-    background: #3498db;
+    background: var(--color-primary); /* Subrayado activo en Primario */
     border-radius: 2px;
 }
 
@@ -317,7 +335,7 @@
 /* Focus states para accesibilidad */
 .nav-link:focus,
 .user-button:focus {
-    outline: 2px solid #3498db;
+    outline: 2px solid var(--color-primary); /* Contorno de foco en Primario */
     outline-offset: 2px;
 }
 

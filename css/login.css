@@ -1,27 +1,30 @@
 /* ===================================
    SISTEMA DE LOGIN - ESTILOS
-   Adaptado con nuestra paleta de colores
+   Adaptado con nuestra paleta de colores INSTITUCIONAL PANTONE
    =================================== */
 
 /* Variables de colores */
 :root {
-    --color-bg-light: #d1d5de;
-    --color-border: #b7b6c2;
-    --color-text-secondary: #837569;
-    --color-primary: #657153;
-    --color-accent: #8aaa79;
+    /* ACTUALIZADOS A LA PALETA INSTITUCIONAL */
+    --color-bg-light: #D8DADE; /* Gris claro institucional */
+    --color-border: #A8AEB2; /* PANTONE Cool Gray C */
+    --color-text-secondary: #A8AEB2; /* Usamos Cool Gray C para texto secundario */
+    --color-primary: #00675B;
+    --color-second: #16433e;
+    --color-accent: #AE843F;
+    
     --color-white: #ffffff;
-    --color-text-dark: #2c3e50;
+    --color-text-dark: #1B1B1B; /* PANTONE Neutral Black C */
     --color-success: #27ae60;
-    --color-warning: #f39c12;
-    --color-danger: #e74c3c;
+    --color-warning: #f39c12; /* Mantenemos este color estándar por ser claro y visible */
+    --color-danger: #A82245; /* PANTONE 7420 C (Vino/Rojo Institucional) */
     --color-info: #3498db;
     
-    /* Sombras y efectos */
-    --shadow-sm: 0 2px 8px rgba(101, 113, 83, 0.08);
-    --shadow-md: 0 4px 20px rgba(101, 113, 83, 0.12);
-    --shadow-lg: 0 8px 32px rgba(101, 113, 83, 0.16);
-    --shadow-xl: 0 12px 40px rgba(101, 113, 83, 0.2);
+    /* Sombras y efectos - RECALCULADAS con el nuevo Primary (#00675B) */
+    --shadow-sm: 0 2px 8px rgba(0, 103, 91, 0.08);
+    --shadow-md: 0 4px 20px rgba(0, 103, 91, 0.12);
+    --shadow-lg: 0 8px 32px rgba(0, 103, 91, 0.16);
+    --shadow-xl: 0 12px 40px rgba(0, 103, 91, 0.2);
     
     /* Transiciones */
     --transition-fast: all 0.2s ease;
@@ -44,6 +47,7 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    /* Los colores del fondo ahora usan los nuevos valores de las variables */
     background: linear-gradient(135deg, var(--color-bg-light) 0%, var(--color-border) 100%);
     min-height: 100vh;
     display: flex;
@@ -59,7 +63,8 @@ body {
 .bg-decoration {
     position: absolute;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+    /* Gradiente actualizado */
+    background: linear-gradient(135deg, var(--color-second), var(--color-primary));
     opacity: 0.1;
     animation: float 6s ease-in-out infinite;
     z-index: 0;
@@ -135,7 +140,8 @@ body {
     left: 0;
     width: 100%;
     height: 4px;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    /* Gradiente actualizado */
+    background: linear-gradient(90deg, var(--color-primary), var(--color-second));
 }
 
 @keyframes slideInUp {
@@ -164,7 +170,8 @@ body {
 .logo-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    /* Gradiente actualizado */
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -182,7 +189,8 @@ body {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
+    /* Gradiente actualizado */
+    background: linear-gradient(135deg, var(--color-second), var(--color-primary));
     opacity: 0;
     transition: var(--transition-normal);
 }
@@ -203,6 +211,7 @@ body {
 .login-header h1 {
     font-size: 2rem;
     font-weight: 700;
+    /* Color principal actualizado */
     color: var(--color-primary);
     margin-bottom: 0.5rem;
     letter-spacing: -0.02em;
@@ -230,6 +239,7 @@ body {
 .form-group label {
     display: block;
     font-weight: 600;
+    /* Color principal actualizado */
     color: var(--color-primary);
     margin-bottom: 0.5rem;
     font-size: 0.9rem;
@@ -256,9 +266,11 @@ body {
 
 .input-container input:focus {
     outline: none;
+    /* Color principal actualizado */
     border-color: var(--color-primary);
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 3px rgba(101, 113, 83, 0.1);
+    /* Sombra con el nuevo color principal (0, 103, 91) */
+    box-shadow: 0 0 0 3px rgba(0, 103, 91, 0.1);
     transform: translateY(-1px);
 }
 
@@ -277,6 +289,7 @@ body {
 }
 
 .input-container:focus-within .input-icon {
+    /* Color principal actualizado */
     color: var(--color-primary);
     transform: scale(1.1);
 }
@@ -294,8 +307,10 @@ body {
 }
 
 .password-toggle:hover {
+    /* Color principal actualizado */
     color: var(--color-primary);
-    background: rgba(101, 113, 83, 0.1);
+    /* Sombra con el nuevo color principal (0, 103, 91) */
+    background: rgba(0, 103, 91, 0.1);
 }
 
 /* ===================================
@@ -343,12 +358,16 @@ body {
 }
 
 .checkbox-container:hover input ~ .checkmark {
+    /* Color principal actualizado */
     border-color: var(--color-primary);
-    background: rgba(101, 113, 83, 0.05);
+    /* Sombra con el nuevo color principal (0, 103, 91) */
+    background: rgba(0, 103, 91, 0.05);
 }
 
 .checkbox-container input:checked ~ .checkmark {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    /* Gradiente actualizado */
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
+    /* Color principal actualizado */
     border-color: var(--color-primary);
 }
 
@@ -370,6 +389,7 @@ body {
 }
 
 .forgot-password {
+    /* Color acento actualizado */
     color: var(--color-accent);
     text-decoration: none;
     font-size: 0.9rem;
@@ -379,6 +399,7 @@ body {
 }
 
 .forgot-password:hover {
+    /* Color principal actualizado */
     color: var(--color-primary);
     text-decoration: underline;
 }
@@ -387,7 +408,8 @@ body {
    BOTÓN DE LOGIN
    =================================== */
 .login-button {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    /* Gradiente actualizado */
+    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
     color: white;
     border: none;
     padding: 1rem 2rem;
@@ -463,6 +485,7 @@ body {
     animation: slideInDown 0.3s ease;
 }
 
+/* Estos colores se mantienen estándar */
 .message-container.success {
     background: rgba(39, 174, 96, 0.1);
     border: 1px solid rgba(39, 174, 96, 0.3);
@@ -470,8 +493,9 @@ body {
 }
 
 .message-container.error {
-    background: rgba(231, 76, 60, 0.1);
-    border: 1px solid rgba(231, 76, 60, 0.3);
+    /* Color danger actualizado */
+    background: rgba(168, 34, 69, 0.1); /* Nuevo rgba de #A82245 */
+    border: 1px solid rgba(168, 34, 69, 0.3);
     color: var(--color-danger);
 }
 
@@ -519,7 +543,8 @@ body {
     text-align: center;
     margin-top: 2rem;
     padding-top: 1.5rem;
-    border-top: 1px solid rgba(183, 182, 194, 0.3);
+    /* Color del borde actualizado */
+    border-top: 1px solid rgba(168, 174, 178, 0.3); /* Nuevo rgba de var(--color-border) */
 }
 
 .login-footer p {
@@ -661,8 +686,9 @@ body {
 }
 
 .input-container.invalid input {
+    /* Color danger actualizado */
     border-color: var(--color-danger);
-    background: rgba(231, 76, 60, 0.02);
+    background: rgba(168, 34, 69, 0.02); /* Nuevo rgba de #A82245 */
 }
 
 .input-container.valid .input-icon {

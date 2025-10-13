@@ -5,30 +5,26 @@
    =================================== */
 
 :root {
-    /* Paleta de colores - ACTUALIZADA A PANTONE INSTITUCIONAL */
-    --color-bg-light: #A8AEB2; /* Gris claro institucional */
-    --color-border: #A8AEB2; /* PANTONE Cool Gray C */
-    --color-text-secondary: #6C757D; /* Gris neutro para contraste */
-    --color-primary: #00675B; /* PANTONE IMSS 561 C (Verde Institucional) */
-    --color-second: #16433e;
-    /* PANTONE IMSS 561 C (Verde Institucional) */
-    --color-accent: #AE843F;
-    /* PANTONE 7402 C (Amarillo Pálido/Oro) */
+    /* Paleta de colores existente */
+    --color-bg-light: #d1d5de;
+    --color-border: #b7b6c2;
+    --color-text-secondary: #837569;
+    --color-primary: #657153;
+    --color-accent: #8aaa79;
     --color-white: #ffffff;
     --color-bg-white: #fafbfc;
-    --color-text-dark: #1B1B1B;
-    --color-success: #27ae60; /* Mantenemos verde estándar para éxito */
-    --color-warning: #f39c12; /* Mantenemos color estándar para advertencia */
-    --color-danger: #A82245; /* PANTONE 7420 C (Vino/Rojo Institucional) */
-    --color-dangerouse: #682336; /* PANTONE 7420 C (Vino/Rojo Institucional) */
+    --color-text-dark: #2c3e50;
+    --color-success: #27ae60;
+    --color-warning: #f39c12;
+    --color-danger: #e74c3c;
     --color-info: #3498db;
 
-    /* Colores específicos para admin (usando las nuevas variables) */
+    /* Colores específicos para admin */
     --color-admin-bg: #f8f9fa;
     --color-admin-card: #ffffff;
-    --color-admin-header: linear-gradient(135deg, var(--color-primary), var(--color-second));
-    --color-admin-accent: var(--color-accent); /* Usamos el acento institucional */
-    --color-super-admin: linear-gradient(135deg, var(--color-dangerouse) 0%, var(--color-danger) 100%); /* Nuevo gradiente con colores institucionales */
+    --color-admin-header: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    --color-admin-accent: #4a90e2;
+    --color-super-admin: linear-gradient(135deg, #8e44ad, #9b59b6);
 
     /* Sombras */
     --shadow-sm: 0 2px 8px rgba(101, 113, 83, 0.08);
@@ -338,7 +334,7 @@
    =================================== */
 
 .btn-admin-primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-second));
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
     color: var(--color-white);
     border: none;
     padding: var(--spacing-sm) var(--spacing-lg);
@@ -354,7 +350,7 @@
 }
 
 .btn-admin-primary:hover {
-    background: linear-gradient(135deg, var(--color-second), var(--color-primary));
+    background: linear-gradient(135deg, var(--color-accent), var(--color-primary));
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -1206,7 +1202,7 @@
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--color-primary), var(--color-second));
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
     border-radius: 3px;
     transition: width 0.3s ease;
 }

@@ -1,10 +1,45 @@
 /* ===================================
    ESTILOS ESPECÍFICOS PARA INVENTARIO
+   PALETA APLICADA:
+   --color-primary: #00675B (Verde Oscuro)
+   --color-accent: #16433e (Verde Musgo)
    =================================== */
+
+:root {
+    /* Colores Principales (Según Solicitud) */
+    --color-primary: #00675B;       /* Verde Oscuro Principal */
+    --color-accent: #16433e;        /* Verde Musgo (Acento/Secundario Oscuro) */
+    
+    /* Colores del Sistema (Estandarizados) */
+    --color-success: #27ae60;      /* Verde Éxito */
+    --color-warning: #ff9800;      /* Naranja Advertencia */
+    --color-danger: #c62828;       /* Rojo Peligro */
+    --color-info: #1565c0;         /* Azul Informativo */
+
+    /* Tonalidades Claras para Fondos de Estado */
+    --color-success-light: #e8f5e8;
+    --color-warning-light: #fff8e1;
+    --color-danger-light: #ffebee;
+    --color-info-light: #e3f2fd;
+    
+    /* Colores Base (Tomados del contexto general) */
+    --color-white: #ffffff;
+    --color-bg-white: #fafbfc;
+    --color-bg-light: #f8f9fa;
+    --color-text-dark: #2c3e50;
+    --color-text-secondary: #837569;
+    --color-border: #b7b6c2;
+    
+    /* Transiciones y Sombras (mantener consistencia) */
+    --transition-fast: all 0.2s ease;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
 
 /* Header de Inventario */
 .inventario-header {
-    background: linear-gradient(135deg, #2c3e50, #34495e);
+    /* Aplicación del degradado con los colores Primary y Accent */
+    background: var(--color-primary);
     color: white;
     padding: 2rem 0;
     margin-bottom: 2rem;
@@ -41,13 +76,15 @@
 
 .stat-number {
     display: block;
+    color: white;
     font-size: 2rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
 
 .stat-number.critical {
-    color: #e74c3c;
+    /* Usando color Danger estandarizado */
+    color: var(--color-danger);
     animation: pulse 2s infinite;
 }
 
@@ -64,16 +101,18 @@
 }
 
 .alert-card {
-    background: #fff3cd;
-    border: 1px solid #ffeaa7;
+    /* Fondo basado en Warning light */
+    background: var(--color-warning-light);
+    border: 1px solid rgba(255, 152, 0, 0.4);
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
 }
 
 .alert-card.critical {
-    background: #f8d7da;
-    border-color: #f5c6cb;
+    /* Fondo basado en Danger light */
+    background: var(--color-danger-light);
+    border-color: rgba(198, 40, 40, 0.4);
 }
 
 .alert-header {
@@ -86,13 +125,15 @@
 }
 
 .alert-header h3 {
-    color: #856404;
+    /* Texto basado en Warning */
+    color: var(--color-warning);
     margin: 0;
     font-size: 1.3rem;
 }
 
 .alert-card.critical .alert-header h3 {
-    color: #721c24;
+    /* Texto basado en Danger */
+    color: var(--color-danger);
 }
 
 .alert-close {
@@ -100,7 +141,7 @@
     border: none;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #856404;
+    color: var(--color-warning);
     padding: 0;
     width: 32px;
     height: 32px;
@@ -112,7 +153,7 @@
 }
 
 .alert-card.critical .alert-close {
-    color: #721c24;
+    color: var(--color-danger);
 }
 
 .alert-close:hover {
@@ -132,11 +173,13 @@
     padding: 1rem;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 8px;
-    border-left: 4px solid #ffc107;
+    /* Borde basado en Warning */
+    border-left: 4px solid var(--color-warning);
 }
 
 .alert-card.critical .alerta-item {
-    border-left-color: #dc3545;
+    /* Borde basado en Danger */
+    border-left-color: var(--color-danger);
 }
 
 .alerta-icon {
@@ -166,6 +209,7 @@
 }
 
 .btn-alerta-action:hover {
+    /* Usando el color accent (#16433e) */
     background: var(--color-accent);
     transform: translateY(-1px);
 }
@@ -201,7 +245,7 @@
 .filtros-inventario select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(101, 113, 83, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 103, 91, 0.1); /* RGBA del color primary */
 }
 
 .acciones-inventario {
@@ -226,6 +270,7 @@
 }
 
 .inventario-table th {
+    /* Fondo basado en Primary */
     background: var(--color-primary);
     color: var(--color-white);
     padding: 1rem;
@@ -290,27 +335,31 @@
 }
 
 .status-critico {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #ffcdd2;
+    /* Usando Danger light/color */
+    background: var(--color-danger-light);
+    color: var(--color-danger);
+    border: 1px solid rgba(198, 40, 40, 0.4);
 }
 
 .status-bajo {
-    background: #fff8e1;
-    color: #f57c00;
-    border: 1px solid #ffe082;
+    /* Usando Warning light/color */
+    background: var(--color-warning-light);
+    color: var(--color-warning);
+    border: 1px solid rgba(255, 152, 0, 0.4);
 }
 
 .status-normal {
-    background: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    /* Usando Success light/color */
+    background: var(--color-success-light);
+    color: var(--color-success);
+    border: 1px solid rgba(39, 174, 96, 0.4);
 }
 
 .status-alto {
-    background: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #bbdefb;
+    /* Usando Info light/color */
+    background: var(--color-info-light);
+    color: var(--color-info);
+    border: 1px solid rgba(21, 101, 192, 0.4);
 }
 
 .text-center {
@@ -392,6 +441,7 @@
     padding: 1rem;
     background: var(--color-bg-light);
     border-radius: 8px;
+    /* Borde por defecto Primary */
     border-left: 4px solid var(--color-primary);
     transition: var(--transition-fast);
 }
@@ -529,12 +579,13 @@
 }
 
 .nuevo-stock-preview {
-    background: #e8f5e8;
-    border: 1px solid #c8e6c9;
+    /* Usando Success light/color */
+    background: var(--color-success-light);
+    border: 1px solid rgba(39, 174, 96, 0.4);
     border-radius: 6px;
     padding: 0.75rem;
     text-align: center;
-    color: #2e7d32;
+    color: var(--color-success);
     font-weight: 500;
 }
 
@@ -581,7 +632,6 @@
     display: grid;
     grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1fr;
     gap: 1rem;
-    padding: 1rem;
     background: var(--color-primary);
     color: var(--color-white);
     font-weight: 600;
@@ -611,7 +661,6 @@
 }
 
 .historial-insumo {
-    font-weight: 500;
     color: var(--color-primary);
 }
 
@@ -787,15 +836,17 @@
 
 /* Indicadores de visibilidad */
 .visibilidad-todos {
-    background: #e8f5e8;
-    color: #2e7d32;
-    border: 1px solid #c8e6c9;
+    /* Usando Success light/color */
+    background: var(--color-success-light);
+    color: var(--color-success);
+    border: 1px solid rgba(39, 174, 96, 0.4);
 }
 
 .visibilidad-solo_direccion {
-    background: #e3f2fd;
-    color: #1565c0;
-    border: 1px solid #bbdefb;
+    /* Usando Info light/color */
+    background: var(--color-info-light);
+    color: var(--color-info);
+    border: 1px solid rgba(21, 101, 192, 0.4);
 }
 
 .visibilidad-ninguno {
@@ -1056,11 +1107,13 @@
 }
 
 .historial-completo::-webkit-scrollbar-thumb {
+    /* Fondo basado en Primary */
     background: var(--color-primary);
     border-radius: 4px;
 }
 
 .historial-completo::-webkit-scrollbar-thumb:hover {
+    /* Fondo basado en Accent */
     background: var(--color-accent);
 }
 
@@ -1129,12 +1182,13 @@
 
 /* Mejor contraste en tabla hover */
 .inventario-table tbody tr:hover {
-    background: rgba(101, 113, 83, 0.04);
+    background: rgba(0, 103, 91, 0.04); /* RGBA basado en Primary */
 }
 
 /* Indicador visual para stock bajo */
 .stock-numero.stock-bajo {
-    background: rgba(245, 124, 0, 0.1);
+    /* Fondo basado en Warning light */
+    background: rgba(255, 152, 0, 0.1); 
     padding: 0.25rem 0.5rem;
     border-radius: 4px;
     animation: pulseWarning 2s infinite;
@@ -1142,10 +1196,10 @@
 
 @keyframes pulseWarning {
     0%, 100% { 
-        background: rgba(245, 124, 0, 0.1);
+        background: rgba(255, 152, 0, 0.1); /* RGBA basado en Warning */
     }
     50% { 
-        background: rgba(245, 124, 0, 0.2);
+        background: rgba(255, 152, 0, 0.2); /* RGBA basado en Warning */
     }
 }
 
@@ -1185,7 +1239,7 @@
 .historial-filtros select:not([value=""]),
 .historial-filtros input:not([value=""]) {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px rgba(101, 113, 83, 0.1);
+    box-shadow: 0 0 0 2px rgba(0, 103, 91, 0.1); /* RGBA basado en Primary */
 }
 
 
@@ -1208,12 +1262,12 @@
     border-radius: 6px 6px 0 0;
     display: grid;
     grid-template-columns: 
-        110px     /* Fecha - igual que contenido */
-        2.2fr     /* Insumo - más espacio */
-        100px     /* Tipo - igual que contenido */
-        80px      /* Cantidad - centrado */
-        120px     /* Stock - para "98 → 97" */
-        140px;    /* Admin - para "Super Administrador" */
+        110px    /* Fecha - igual que contenido */
+        2.2fr    /* Insumo - más espacio */
+        100px    /* Tipo - igual que contenido */
+        80px     /* Cantidad - centrado */
+        120px    /* Stock - para "98 → 97" */
+        140px;   /* Admin - para "Super Administrador" */
     gap: 1rem;
     align-items: center;
     text-align: left; /* Por defecto izquierda */
@@ -1221,7 +1275,7 @@
 
 /* Centrar headers específicos que deben ir centrados */
 .historial-header-row > div:nth-child(4), /* Cantidad */
-.historial-header-row > div:nth-child(5)  /* Stock */ {
+.historial-header-row > div:nth-child(5) /* Stock */ {
     text-align: center;
 }
 
@@ -1231,12 +1285,12 @@
     border-bottom: 1px solid var(--color-border) !important;
     display: grid;
     grid-template-columns: 
-        110px     /* Fecha */
-        2.2fr     /* Insumo */
-        100px     /* Tipo */
-        80px      /* Cantidad */
-        120px     /* Stock */
-        140px;    /* Admin */
+        110px    /* Fecha */
+        2.2fr    /* Insumo */
+        100px    /* Tipo */
+        80px     /* Cantidad */
+        120px    /* Stock */
+        140px;   /* Admin */
     gap: 1rem;
     align-items: center;
     font-size: 0.9rem;
@@ -1297,7 +1351,8 @@
 }
 
 .permission-message {
-    background: linear-gradient(135deg, #ff9800, #f57c00);
+    /* Usando degradado basado en Warning */
+    background: linear-gradient(135deg, var(--color-warning), #d37300);
     color: white;
     padding: 1rem 1.5rem;
     border-radius: 8px;
@@ -1305,6 +1360,7 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    /* Usando sombra basada en Warning (misma RGBA de #ff9800) */
     box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     animation: slideInPermission 0.5s ease;
 }
@@ -1386,12 +1442,12 @@
     .historial-header-row,
     .historial-row {
         grid-template-columns: 
-            90px      /* Fecha - más pequeña */
-            2fr       /* Insumo - flexible */
-            90px      /* Tipo - más pequeña */
-            70px      /* Cantidad */
-            110px     /* Stock */
-            120px;    /* Admin */
+            90px    /* Fecha - más pequeña */
+            2fr     /* Insumo - flexible */
+            90px    /* Tipo - más pequeña */
+            70px    /* Cantidad */
+            110px   /* Stock */
+            120px;  /* Admin */
         gap: 0.75rem;
         font-size: 0.85rem;
     }
@@ -1405,6 +1461,7 @@
 
 .filtro-grupo label {
     font-weight: 500;
-    color: #657153;
+    /* Texto de label basado en Primary */
+    color: var(--color-primary);
     font-size: 0.9rem;
 }

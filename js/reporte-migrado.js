@@ -32,7 +32,7 @@ function configurarSelectores() {
             <option value="anual">Año completo</option>
         `;
     }
-    
+
     // Selector de mes
     const selectorMes = document.getElementById('selectorMes');
     if (selectorMes) {
@@ -40,28 +40,28 @@ function configurarSelectores() {
             'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
             'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
         ];
-        
+
         let html = '';
         meses.forEach((nombre, index) => {
             const valor = index + 1;
             const selected = valor === mesSeleccionado ? 'selected' : '';
             html += `<option value="${valor}" ${selected}>${nombre}</option>`;
         });
-        
+
         selectorMes.innerHTML = html;
     }
-    
+
     // Selector de año
     const selectorAno = document.getElementById('selectorAno');
     if (selectorAno) {
         const anoActual = new Date().getFullYear();
         let html = '';
-        
+
         for (let ano = anoActual - 2; ano <= anoActual; ano++) {
             const selected = ano === anoSeleccionado ? 'selected' : '';
             html += `<option value="${ano}" ${selected}>${ano}</option>`;
         }
-        
+
         selectorAno.innerHTML = html;
     }
 }
@@ -69,7 +69,7 @@ function configurarSelectores() {
 function cambiarTipoPeriodo() {
     tipoPeriodoSeleccionado = document.getElementById('tipoPeriodo').value;
     const mesContainer = document.getElementById('mes-container');
-    
+
     if (mesContainer) {
         mesContainer.style.display = tipoPeriodoSeleccionado === 'mes' ? 'block' : 'none';
     }
@@ -87,13 +87,13 @@ async function cargarAreas() {
             credentials: 'include',
             body: JSON.stringify({ action: 'get-areas' })
         });
-        
+
         const result = await response.json();
-        
+
         if (!result.success) throw new Error(result.error);
-        
+
         areasDisponibles = result.data || [];
-        
+
         const selectorArea = document.getElementById('selectorArea');
         if (selectorArea) {
             let html = '<option value="">Todas las áreas</option>';
@@ -102,7 +102,7 @@ async function cargarAreas() {
             });
             selectorArea.innerHTML = html;
         }
-        
+
     } catch (error) {
         console.error('Error cargando áreas:', error);
     }
@@ -118,15 +118,15 @@ async function ejecutarReporte() {
         anoSeleccionado = parseInt(document.getElementById('selectorAno').value);
         areaSeleccionada = document.getElementById('selectorArea').value;
         const recursoSeleccionado = document.getElementById('selectorRecurso')?.value || null;
-        
+
         mostrarLoadingReporte(true);
-        
+
         let datosActual, datosAnterior;
-        
+
         if (tipoPeriodoSeleccionado === 'mes') {
             // Reporte mensual
             mesSeleccionado = parseInt(document.getElementById('selectorMes').value);
-            
+
             const responseMensual = await fetch(API_REPORTES_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -139,14 +139,14 @@ async function ejecutarReporte() {
                     recurso_tipo: recursoSeleccionado
                 })
             });
-            
+
             const resultMensual = await responseMensual.json();
-            
+
             if (!resultMensual.success) throw new Error(resultMensual.error);
-            
+
             datosActual = resultMensual.data.actual;
             datosAnterior = resultMensual.data.anterior;
-            
+
         } else if (tipoPeriodoSeleccionado === 'anual') {
             // Reporte anual
             const responseAnual = await fetch(API_REPORTES_URL, {
@@ -160,15 +160,15 @@ async function ejecutarReporte() {
                     recurso_tipo: recursoSeleccionado
                 })
             });
-            
+
             const resultAnual = await responseAnual.json();
-            
+
             if (!resultAnual.success) throw new Error(resultAnual.error);
-            
+
             datosActual = resultAnual.data.actual;
             datosAnterior = resultAnual.data.anterior;
         }
-        
+
         // Guardar datos del reporte
         datosReporte = {
             periodo: {
@@ -181,15 +181,15 @@ async function ejecutarReporte() {
             actual: datosActual,
             anterior: datosAnterior
         };
-        
+
         renderizarReporte();
-        
+
         setTimeout(() => {
             crearGraficos();
         }, 200);
-        
+
         mostrarLoadingReporte(false);
-        
+
     } catch (error) {
         console.error('❌ Error ejecutando reporte:', error);
         mostrarErrorReporte('Error generando el reporte: ' + error.message);
@@ -204,10 +204,10 @@ async function ejecutarReporte() {
 function renderizarReporte() {
     const container = document.getElementById('reporteContenido');
     if (!container || !datosReporte) return;
-    
+
     const tituloArea = datosReporte.periodo.area ? ` - ${datosReporte.periodo.area}` : '';
     const recursoFiltrado = datosReporte.periodo.recurso;
-    
+
     let html = `
         <div class="reporte-titulo">
             <h3>${obtenerTituloReporte()}${tituloArea}</h3>
@@ -255,26 +255,26 @@ function renderizarReporte() {
             </button>
         </div>
     `;
-    
+
     container.innerHTML = html;
     container.style.display = 'block';
 }
 
 function obtenerTituloReporte() {
     let titulo = '';
-    
+
     if (datosReporte.periodo.tipo === 'anual') {
         titulo = `Reporte Anual ${datosReporte.periodo.ano}`;
     } else {
         const nombreMes = obtenerNombreMes(datosReporte.periodo.mes);
         titulo = `Reporte de ${nombreMes} ${datosReporte.periodo.ano}`;
     }
-    
+
     if (datosReporte.periodo.recurso) {
         const tipoRecurso = datosReporte.periodo.recurso === 'insumo' ? '📦 Insumos' : '📝 Papelería';
         titulo += ` - ${tipoRecurso}`;
     }
-    
+
     return titulo;
 }
 
@@ -291,7 +291,7 @@ function obtenerTituloRecursos(recursoFiltrado) {
 function crearTarjetaEstadistica(titulo, actual, anterior) {
     const cambio = calcularCambioSeguro(actual, anterior);
     const claseCambio = cambio.startsWith('+') ? 'positivo' : cambio.startsWith('-') ? 'negativo' : 'neutral';
-    
+
     return `
         <div class="tarjeta-estadistica">
             <div class="estadistica-titulo">${titulo}</div>
@@ -305,16 +305,16 @@ function crearTablaPorAreas() {
     const areasOrdenadas = Object.entries(datosReporte.actual.porArea)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8);
-    
+
     if (areasOrdenadas.length === 0) {
         return '<p class="no-datos">No hay datos de áreas para este período</p>';
     }
-    
+
     let tbody = '';
     areasOrdenadas.forEach(([area, cantidad]) => {
         const anterior = datosReporte.anterior.porArea[area] || 0;
         const cambio = calcularCambioSeguro(cantidad, anterior);
-        
+
         tbody += `
             <tr>
                 <td class="area-nombre">${area}</td>
@@ -323,7 +323,7 @@ function crearTablaPorAreas() {
             </tr>
         `;
     });
-    
+
     return `
         <table class="tabla-reporte">
             <thead>
@@ -342,7 +342,7 @@ function crearTablaPorAreas() {
 
 function crearTablaRecursos(recursoFiltrado) {
     let datos = {};
-    
+
     if (recursoFiltrado === 'insumo') {
         datos = datosReporte.actual.insumosSolicitados;
     } else if (recursoFiltrado === 'papeleria') {
@@ -350,17 +350,17 @@ function crearTablaRecursos(recursoFiltrado) {
     } else {
         datos = datosReporte.actual.recursosSolicitados;
     }
-    
+
     if (!datos || Object.keys(datos).length === 0) {
-        const tipoRecurso = recursoFiltrado === 'insumo' ? 'insumos' : 
-                           recursoFiltrado === 'papeleria' ? 'papelería' : 'recursos';
+        const tipoRecurso = recursoFiltrado === 'insumo' ? 'insumos' :
+            recursoFiltrado === 'papeleria' ? 'papelería' : 'recursos';
         return `<p class="no-datos">No hay datos de ${tipoRecurso} para este período</p>`;
     }
-    
+
     const recursosOrdenados = Object.entries(datos)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10);
-    
+
     let html = `
         <table class="tabla-reporte">
             <thead>
@@ -372,7 +372,7 @@ function crearTablaRecursos(recursoFiltrado) {
             </thead>
             <tbody>
     `;
-    
+
     recursosOrdenados.forEach(([recurso, cantidad]) => {
         let cantidadAnterior = 0;
         if (recursoFiltrado === 'insumo') {
@@ -382,9 +382,9 @@ function crearTablaRecursos(recursoFiltrado) {
         } else {
             cantidadAnterior = datosReporte.anterior.recursosSolicitados[recurso] || 0;
         }
-        
+
         const cambio = calcularCambioSeguro(cantidad, cantidadAnterior);
-        
+
         html += `
             <tr>
                 <td>${recurso}</td>
@@ -393,12 +393,12 @@ function crearTablaRecursos(recursoFiltrado) {
             </tr>
         `;
     });
-    
+
     html += `
             </tbody>
         </table>
     `;
-    
+
     return html;
 }
 
@@ -416,16 +416,16 @@ function crearGraficos() {
 function crearGraficoAreas() {
     const canvas = document.getElementById('graficoAreas');
     if (!canvas) return;
-    
+
     const areas = Object.entries(datosReporte.actual.porArea)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 6);
-    
+
     if (areas.length === 0) {
         canvas.style.display = 'none';
         return;
     }
-    
+
     new Chart(canvas, {
         type: 'bar',
         data: {
@@ -433,8 +433,8 @@ function crearGraficoAreas() {
             datasets: [{
                 label: 'Solicitudes',
                 data: areas.map(([, cantidad]) => cantidad),
-                backgroundColor: '#667eea',
-                borderColor: '#764ba2',
+                backgroundColor: '#682336',
+                borderColor: '#7d2940ff',
                 borderWidth: 1
             }]
         },
@@ -460,10 +460,10 @@ function crearGraficoAreas() {
 function crearGraficoRecursos() {
     const canvas = document.getElementById('graficoRecursos');
     if (!canvas) return;
-    
+
     const recursoFiltrado = datosReporte.periodo.recurso;
     let datos = {};
-    
+
     if (recursoFiltrado === 'insumo') {
         datos = datosReporte.actual.insumosSolicitados;
     } else if (recursoFiltrado === 'papeleria') {
@@ -471,31 +471,39 @@ function crearGraficoRecursos() {
     } else {
         datos = datosReporte.actual.recursosSolicitados;
     }
-    
+
     if (!datos || Object.keys(datos).length === 0) {
         canvas.style.display = 'none';
         return;
     }
-    
+
     const recursosTop = Object.entries(datos)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 8);
-    
+
     new Chart(canvas, {
         type: 'doughnut',
         data: {
-            labels: recursosTop.map(([recurso]) => 
+            labels: recursosTop.map(([recurso]) =>
                 recurso.length > 25 ? recurso.substring(0, 22) + '...' : recurso
             ),
             datasets: [{
                 data: recursosTop.map(([, cantidad]) => cantidad),
                 backgroundColor: [
-                    '#667eea', '#764ba2', '#f093fb', '#4facfe',
-                    '#43e97b', '#fa709a', '#fee140', '#30cfd0'
+                    /* Paleta profesional y coherente con el verde oscuro */
+                    '#00675B', // 1. Verde Principal
+                    '#68A69E', // 2. Verde Agua Suave
+                    '#16433e', // 3. Verde Musgo (Acento)
+                    '#B39EB5', // 4. Lavanda Suave
+                    '#F0B863', // 5. Oro Viejo
+                    '#7F7A77', // 6. Gris Pizarra
+                    '#C33C5B', // 7. Rojo Ladrillo
+                    '#A27F6D'  // 8. Bronce/Tostado
                 ],
                 borderWidth: 2,
                 borderColor: '#fff'
             }]
+
         },
         options: {
             responsive: true,
@@ -522,12 +530,12 @@ function exportarReporteCompleto() {
         alert('No hay datos para exportar');
         return;
     }
-    
+
     const nombreReporte = obtenerTituloReporte();
     const sufijo = datosReporte.periodo.area ? `_${datosReporte.periodo.area}` : '_todas_areas';
-    
+
     const datosExportacion = [];
-    
+
     // Información del reporte
     datosExportacion.push({
         'Sección': 'INFORMACIÓN',
@@ -535,40 +543,40 @@ function exportarReporteCompleto() {
         'Valor': nombreReporte,
         'Observaciones': datosReporte.periodo.area || 'Todas las áreas'
     });
-    
+
     datosExportacion.push({
         'Sección': '',
         'Concepto': 'Total Solicitudes',
         'Valor': datosReporte.actual.total,
         'Observaciones': calcularCambioSeguro(datosReporte.actual.total, datosReporte.anterior.total)
     });
-    
+
     datosExportacion.push({
         'Sección': '',
         'Concepto': 'Tokens Usados',
         'Valor': datosReporte.actual.tokenUsados,
         'Observaciones': calcularCambioSeguro(datosReporte.actual.tokenUsados, datosReporte.anterior.tokenUsados)
     });
-    
+
     datosExportacion.push({});
-    
+
     // Por áreas
-    datosExportacion.push({ 
-        'Sección': 'ANÁLISIS POR ÁREA', 
-        'Concepto': '', 
-        'Valor': '', 
-        'Observaciones': '' 
+    datosExportacion.push({
+        'Sección': 'ANÁLISIS POR ÁREA',
+        'Concepto': '',
+        'Valor': '',
+        'Observaciones': ''
     });
-    
+
     const areasOrdenadas = Object.entries(datosReporte.actual.porArea)
         .sort((a, b) => b[1] - a[1]);
-    
+
     areasOrdenadas.forEach(([area, cantidad]) => {
         const anterior = datosReporte.anterior.porArea[area] || 0;
         const cambio = calcularCambioSeguro(cantidad, anterior);
-        const porcentaje = datosReporte.actual.total > 0 ? 
+        const porcentaje = datosReporte.actual.total > 0 ?
             ((cantidad / datosReporte.actual.total) * 100).toFixed(1) + '%' : '0%';
-        
+
         datosExportacion.push({
             'Sección': '',
             'Concepto': area,
@@ -576,17 +584,17 @@ function exportarReporteCompleto() {
             'Observaciones': `${porcentaje} del total | Cambio: ${cambio}`
         });
     });
-    
+
     datosExportacion.push({});
-    
+
     // Recursos
-    datosExportacion.push({ 
-        'Sección': 'RECURSOS MÁS SOLICITADOS', 
-        'Concepto': '', 
-        'Valor': '', 
-        'Observaciones': '' 
+    datosExportacion.push({
+        'Sección': 'RECURSOS MÁS SOLICITADOS',
+        'Concepto': '',
+        'Valor': '',
+        'Observaciones': ''
     });
-    
+
     Object.entries(datosReporte.actual.recursosSolicitados)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 20)
@@ -599,7 +607,7 @@ function exportarReporteCompleto() {
                 'Observaciones': calcularCambioSeguro(cantidad, anterior)
             });
         });
-    
+
     exportarCSV(datosExportacion, `reporte_${datosReporte.periodo.ano}${sufijo}`);
 }
 
@@ -607,20 +615,20 @@ function exportarCSV(data, nombreArchivo) {
     const csvContent = convertirACSV(data);
     const BOM = '\uFEFF';
     const contentWithBOM = BOM + csvContent;
-    
+
     const blob = new Blob([contentWithBOM], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `${nombreArchivo}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     setTimeout(() => URL.revokeObjectURL(url), 100);
-    
+
     if (window.showNotificationAdmin) {
         showNotificationAdmin('Reporte exportado exitosamente', 'success');
     }
@@ -628,14 +636,14 @@ function exportarCSV(data, nombreArchivo) {
 
 function convertirACSV(data) {
     if (!data || data.length === 0) return '';
-    
+
     const headers = Object.keys(data[0]);
     const csvContent = [
         headers.join(','),
         ...data.map(row => headers.map(header => {
             const value = row[header];
             if (value === null || value === undefined) return '';
-            
+
             const stringValue = value.toString();
             if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
                 return `"${stringValue.replace(/"/g, '""')}"`;
@@ -643,7 +651,7 @@ function convertirACSV(data) {
             return stringValue;
         }).join(','))
     ].join('\r\n');
-    
+
     return csvContent;
 }
 
@@ -663,10 +671,10 @@ function calcularCambioSeguro(actual, anterior) {
     if (!anterior || anterior === 0) {
         return actual > 0 ? `+${actual}` : '0';
     }
-    
+
     const diferencia = actual - anterior;
     if (diferencia === 0) return '0';
-    
+
     const porcentaje = Math.abs((diferencia / anterior) * 100).toFixed(1);
     return diferencia > 0 ? `+${diferencia} (+${porcentaje}%)` : `${diferencia} (-${porcentaje}%)`;
 }
@@ -674,7 +682,7 @@ function calcularCambioSeguro(actual, anterior) {
 function mostrarLoadingReporte(mostrar) {
     const loading = document.getElementById('reporteLoading');
     const contenido = document.getElementById('reporteContenido');
-    
+
     if (loading) loading.style.display = mostrar ? 'block' : 'none';
     if (contenido) contenido.style.display = mostrar ? 'none' : 'block';
 }
