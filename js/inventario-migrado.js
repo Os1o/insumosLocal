@@ -521,12 +521,16 @@ function cargarItemsEnSelect() {
 }
 
 async function confirmarRestock() {
+    const btnConfirmar = document.getElementById('btnConfirmarRestock');
+    const textoOriginal = btnConfirmar.innerHTML; // 🔑 GUARDAR TEXTO ORIGINAL
+    
     try {
         const itemId = document.getElementById('insumoSelect').value;
         const cantidad = parseInt(document.getElementById('cantidadAgregar').value) || 0;
         const tipoMovimiento = document.getElementById('tipoMovimiento').value;
         const motivo = document.getElementById('motivoRestock').value.trim();
 
+        // Validaciones
         if (!itemId) {
             showNotificationInventario(`Selecciona un ${tipoRecursoActual === 'papeleria' ? 'item de papelería' : 'insumo'}`, 'warning');
             return;
@@ -548,7 +552,7 @@ async function confirmarRestock() {
         const stockAnterior = item.stock_actual;
         const stockNuevo = stockAnterior + cantidad;
 
-        const btnConfirmar = document.getElementById('btnConfirmarRestock');
+        // 🔴 CAMBIAR BOTÓN A "PROCESANDO"
         btnConfirmar.disabled = true;
         btnConfirmar.innerHTML = '⏳ Procesando...';
 
@@ -613,15 +617,20 @@ async function confirmarRestock() {
         await cargarMovimientosRecientes();
 
         showNotificationInventario(`Stock actualizado: ${item.nombre} (+${cantidad} ${item.unidad_medida})`, 'success');
+        
+        // ✅ RESETEAR BOTÓN ANTES DE CERRAR
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerHTML = textoOriginal;
+        
         cerrarModalRestock();
 
     } catch (error) {
         console.error('Error en restock:', error);
-        showNotificationInventario('Error al actualizar el stock', 'error');
-
-        const btnConfirmar = document.getElementById('btnConfirmarRestock');
+        showNotificationInventario('Error al actualizar el stock: ' + error.message, 'error');
+        
+        // ❌ RESETEAR BOTÓN EN CASO DE ERROR
         btnConfirmar.disabled = false;
-        btnConfirmar.innerHTML = '➕ Agregar Stock';
+        btnConfirmar.innerHTML = textoOriginal;
     }
 }
 
@@ -1237,15 +1246,26 @@ function calcularNuevoStock() {
 }
 
 function cerrarModalRestock() {
-    document.getElementById('restockModal').style.display = 'none';
+    const modal = document.getElementById('restockModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
     document.body.style.overflow = '';
 
+    // Limpiar formulario
     document.getElementById('insumoSelect').value = '';
     document.getElementById('cantidadAgregar').value = '';
     document.getElementById('tipoMovimiento').value = '';
     document.getElementById('motivoRestock').value = '';
     document.getElementById('insumoInfoCard').style.display = 'none';
     document.getElementById('nuevoStockPreview').style.display = 'none';
+    
+    // 🔑 RESETEAR EL BOTÓN SIEMPRE
+    const btnConfirmar = document.getElementById('btnConfirmarRestock');
+    if (btnConfirmar) {
+        btnConfirmar.disabled = false;
+        btnConfirmar.innerHTML = '➕ Agregar Stock';
+    }
 }
 
 function cerrarModalEditarInsumo() {
