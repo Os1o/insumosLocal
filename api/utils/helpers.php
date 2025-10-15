@@ -23,10 +23,24 @@ function sendResponse($success, $data = null, $error = null, $statusCode = 200) 
  * Configurar headers CORS
  */
 function setupCORS() {
-    header('Access-Control-Allow-Origin: http://160.185.155.10:8080');
+    // Obtener el origen de la petición
+    $allowedOrigins = [
+        'http://11.254.27.18'
+    ];
+    
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    
+    if (in_array($origin, $allowedOrigins)) {
+        header("Access-Control-Allow-Origin: $origin");
+    } else {
+        // Por defecto usar la IP principal
+        header('Access-Control-Allow-Origin: http://11.254.27.18');
+    }
+    
     header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
     header('Access-Control-Allow-Headers: Content-Type, Authorization');
     header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Max-Age: 86400'); // Cache preflight por 24 horas
     
     // Manejar preflight
     if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {

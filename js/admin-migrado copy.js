@@ -6,8 +6,6 @@
 let todasLasSolicitudes = [];
 let solicitudesFiltradas = [];
 let currentAdmin = null;
-let contadorAnteriorPendientes = 0; // NUEVO: Para detectar nuevas solicitudes
-let intervalVerificacion = null;     // NUEVO: Para el polling
 
 // Usar API Adapter en lugar de Supabase
 const apiAdmin = window.API;
@@ -82,200 +80,39 @@ function configurarEventListeners() {
 // ===================================
 // CARGA DE DATOS
 // ===================================
+
 async function cargarTodasLasSolicitudes() {
     try {
         console.log('📥 Cargando solicitudes desde API local...');
         mostrarLoadingAdmin(true);
 
-        // Usar fetch directo al endpoint de admin con credenciales
-        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/admin.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include', // IMPORTANTE: Incluir cookies de sesión
-            body: JSON.stringify({
-                action: 'get-solicitudes'
-            })
-        });
+        // Usar API adapter para obtener solicitudes
+        const { data: solicitudes, error } = await apiAdmin
+            .from('solicitudes')
+            .select('*');
 
-        const result = await response.json();
-
-        if (!result.success) {
-            console.error('❌ Error de API:', result.error);
-            throw new Error(result.error || 'Error cargando solicitudes');
+        if (error) {
+            console.error('❌ Error de API:', error);
+            throw error;
         }
 
-        console.log(`✅ Solicitudes cargadas: ${result.data?.length || 0}`);
+        console.log(`✅ Solicitudes cargadas: ${solicitudes?.length || 0}`);
 
-        todasLasSolicitudes = result.data || [];
+        todasLasSolicitudes = solicitudes || [];
         solicitudesFiltradas = [...todasLasSolicitudes];
 
         renderizarSolicitudesSimples(solicitudesFiltradas);
         actualizarEstadisticasAdmin(todasLasSolicitudes);
 
         mostrarLoadingAdmin(false);
-        
-        // Iniciar verificación automática después de la primera carga
-        iniciarVerificacionAutomatica();
 
     } catch (error) {
         console.error('❌ Error completo:', error);
-        mostrarErrorAdmin('Error al cargar solicitudes: ' + error.message);
+        mostrarErrorAdmin('Error al cargar solicitudes');
         mostrarLoadingAdmin(false);
     }
 }
 
-/*-------------------------------------------------------------------------------------------*/
-
-// ===================================
-// VERIFICACIÓN AUTOMÁTICA DE NUEVAS SOLICITUDES
-// ===================================
-
-async function verificarNuevasSolicitudes() {
-    try {
-        // Usar el mismo endpoint de admin con credenciales
-        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/admin.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                action: 'get-solicitudes'
-            })
-        });
-
-        const result = await response.json();
-
-        if (!result.success || !result.data) return;
-
-        const solicitudes = result.data;
-        const pendientesActuales = solicitudes.filter(s => s.estado === 'pendiente').length;
-
-        // Si hay MÁS pendientes que antes, hay nuevas solicitudes
-        if (contadorAnteriorPendientes > 0 && pendientesActuales > contadorAnteriorPendientes) {
-            const nuevasSolicitudes = pendientesActuales - contadorAnteriorPendientes;
-            console.log(`🔔 ${nuevasSolicitudes} nueva(s) solicitud(es) detectada(s)`);
-
-            // Reproducir sonido de notificación
-            if (window.reproducirSonidoNotificacion) {
-                window.reproducirSonidoNotificacion();
-            }
-
-            // Mostrar notificación visual
-            mostrarNotificacionNuevaSolicitud(nuevasSolicitudes);
-
-            // Recargar automáticamente las solicitudes
-            await cargarTodasLasSolicitudes();
-        }
-
-        // Actualizar contador para la próxima verificación
-        contadorAnteriorPendientes = pendientesActuales;
-
-    } catch (error) {
-        console.error('Error verificando nuevas solicitudes:', error);
-    }
-}
-
-function mostrarNotificacionNuevaSolicitud(cantidad) {
-    const notificacion = document.createElement('div');
-    notificacion.className = 'notificacion-nueva-solicitud';
-    notificacion.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem 2rem;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        z-index: 10000;
-        animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        cursor: pointer;
-        min-width: 320px;
-    `;
-
-    notificacion.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="font-size: 2.5rem; animation: pulse 1s infinite;">🔔</div>
-            <div style="flex: 1;">
-                <div style="font-weight: bold; font-size: 1.1rem; margin-bottom: 0.25rem;">
-                    ${cantidad === 1 ? '¡Nueva Solicitud!' : `¡${cantidad} Nuevas Solicitudes!`}
-                </div>
-                <div style="font-size: 0.9rem; opacity: 0.9;">
-                    Click aquí para ver detalles
-                </div>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" style="
-                background: rgba(255,255,255,0.2);
-                border: none;
-                color: white;
-                font-size: 1.5rem;
-                cursor: pointer;
-                width: 30px;
-                height: 30px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            ">×</button>
-        </div>
-    `;
-
-    // Hacer click para ir a la primera solicitud pendiente
-    notificacion.onclick = function(e) {
-        if (e.target.tagName !== 'BUTTON') {
-            const primeraPendiente = todasLasSolicitudes.find(s => s.estado === 'pendiente');
-            if (primeraPendiente) {
-                abrirModalRevision(primeraPendiente.id);
-            }
-            notificacion.remove();
-        }
-    };
-
-    document.body.appendChild(notificacion);
-
-    // Auto-eliminar después de 8 segundos
-    setTimeout(() => {
-        if (notificacion.parentNode) {
-            notificacion.style.animation = 'fadeOut 0.5s ease';
-            setTimeout(() => notificacion.remove(), 500);
-        }
-    }, 8000);
-}
-
-// Iniciar verificación automática cada 30 segundos
-function iniciarVerificacionAutomatica() {
-    if (intervalVerificacion) {
-        clearInterval(intervalVerificacion);
-    }
-    
-    // Inicializar contador con el valor actual
-    contadorAnteriorPendientes = todasLasSolicitudes.filter(s => s.estado === 'pendiente').length;
-    
-    // Verificar cada 30 segundos
-    intervalVerificacion = setInterval(verificarNuevasSolicitudes, 30000);
-    
-    console.log('✅ Verificación automática de solicitudes iniciada (cada 30 segundos)');
-}
-
-// Detener verificación (útil si cambias de página)
-function detenerVerificacionAutomatica() {
-    if (intervalVerificacion) {
-        clearInterval(intervalVerificacion);
-        intervalVerificacion = null;
-        console.log('⏸️ Verificación automática detenida');
-    }
-}
-
-
-
-
-
-
-
-/*-------------------------------------------------------------------------------------------*/
 function renderizarSolicitudesSimples(solicitudes) {
     const lista = document.getElementById('solicitudesAdminLista');
     if (!lista) return;

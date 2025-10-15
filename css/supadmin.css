@@ -6,10 +6,14 @@
 
 :root {
     /* Paleta de colores - ACTUALIZADA A PANTONE INSTITUCIONAL */
-    --color-bg-light: #A8AEB2; /* Gris claro institucional */
-    --color-border: #A8AEB2; /* PANTONE Cool Gray C */
-    --color-text-secondary: #6C757D; /* Gris neutro para contraste */
-    --color-primary: #00675B; /* PANTONE IMSS 561 C (Verde Institucional) */
+    --color-bg-light: #A8AEB2;
+    /* Gris claro institucional */
+    --color-border: #A8AEB2;
+    /* PANTONE Cool Gray C */
+    --color-text-secondary: #6C757D;
+    /* Gris neutro para contraste */
+    --color-primary: #00675B;
+    /* PANTONE IMSS 561 C (Verde Institucional) */
     --color-second: #16433e;
     /* PANTONE IMSS 561 C (Verde Institucional) */
     --color-accent: #AE843F;
@@ -17,18 +21,24 @@
     --color-white: #ffffff;
     --color-bg-white: #fafbfc;
     --color-text-dark: #1B1B1B;
-    --color-success: #27ae60; /* Mantenemos verde estándar para éxito */
-    --color-warning: #f39c12; /* Mantenemos color estándar para advertencia */
-    --color-danger: #A82245; /* PANTONE 7420 C (Vino/Rojo Institucional) */
-    --color-dangerouse: #682336; /* PANTONE 7420 C (Vino/Rojo Institucional) */
+    --color-success: #27ae60;
+    /* Mantenemos verde estándar para éxito */
+    --color-warning: #f39c12;
+    /* Mantenemos color estándar para advertencia */
+    --color-danger: #A82245;
+    /* PANTONE 7420 C (Vino/Rojo Institucional) */
+    --color-dangerouse: #682336;
+    /* PANTONE 7420 C (Vino/Rojo Institucional) */
     --color-info: #3498db;
 
     /* Colores específicos para admin (usando las nuevas variables) */
     --color-admin-bg: #f8f9fa;
     --color-admin-card: #ffffff;
     --color-admin-header: linear-gradient(135deg, var(--color-primary), var(--color-second));
-    --color-admin-accent: var(--color-accent); /* Usamos el acento institucional */
-    --color-super-admin: linear-gradient(135deg, var(--color-dangerouse) 0%, var(--color-danger) 100%); /* Nuevo gradiente con colores institucionales */
+    --color-admin-accent: var(--color-accent);
+    /* Usamos el acento institucional */
+    --color-super-admin: linear-gradient(135deg, var(--color-dangerouse) 0%, var(--color-danger) 100%);
+    /* Nuevo gradiente con colores institucionales */
 
     /* Sombras */
     --shadow-sm: 0 2px 8px rgba(101, 113, 83, 0.08);
@@ -1716,6 +1726,61 @@
     color: white;
     border: 1px solid #c0392b;
 }
+
 /* ===================================
    FIN DEL ARCHIVO CSS ADMIN
    =================================== */
+
+
+
+
+
+
+
+
+
+@keyframes bounceIn {
+    0% {
+        transform: scale(0) translateY(-50px);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+.notificacion-nueva-solicitud:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
