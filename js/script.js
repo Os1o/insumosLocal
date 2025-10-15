@@ -1338,6 +1338,13 @@ function scrollToTop() {
     });
 }
 
+function scrollToFooter() {
+    const footer = document.querySelector("footer");
+    if (footer) {
+        footer.scrollIntoView({ behavior: "smooth" });
+    }
+}
+
 // Actualizar estadísticas del footer
 function updateFooterStats() {
     const totalSolicitudesEl = document.getElementById('totalSolicitudes');
