@@ -854,6 +854,98 @@ function actualizarEstadisticasAdmin(solicitudes) {
     updateElement('totalItems', stats.total);
 }
 
+
+
+async function procesarRenovacionMensual() {
+    try {
+        console.log('Iniciando proceso de renovación mensual...');
+
+        const response = await fetch('http://11.254.27.18/insumos/api/endpoints/renovacion-mensual.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                action: 'ejecutar-proceso'
+            })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.error || 'Error en el proceso');
+        }
+
+        console.log('Proceso completado:', result.data);
+
+        // Mostrar resumen del proceso
+        const stats = result.data.estadisticas;
+        let mensaje = `✅ PROCESO DE RENOVACIÓN MENSUAL COMPLETADO\n\n`;
+        mensaje += `📊 RESUMEN:\n`;
+        mensaje += `• Total de usuarios procesados: ${stats.total_usuarios}\n\n`;
+        
+        mensaje += `🥤 TOKENS DE INSUMOS:\n`;
+        mensaje += `  ✅ Renovados: ${stats.insumos_renovados}\n`;
+        mensaje += `  ❌ NO renovados: ${stats.insumos_no_renovados}\n\n`;
+        
+        mensaje += `📄 TOKENS DE PAPELERÍA ORDINARIA:\n`;
+        mensaje += `  ✅ Renovados: ${stats.papeleria_ord_renovados}\n`;
+        mensaje += `  ❌ NO renovados: ${stats.papeleria_ord_no_renovados}\n\n`;
+        
+        mensaje += `📋 TOKENS DE PAPELERÍA EXTRAORDINARIA:\n`;
+        mensaje += `  ✅ Renovados: ${stats.papeleria_ext_renovados}\n`;
+        mensaje += `  ❌ NO renovados: ${stats.papeleria_ext_no_renovados}\n`;
+
+        if (result.data.advertencias && result.data.advertencias.length > 0) {
+            mensaje += `\n⚠️ ADVERTENCIAS:\n`;
+            result.data.advertencias.forEach(adv => {
+                mensaje += `• ${adv}\n`;
+            });
+        }
+
+        // Mostrar detalles en consola
+        console.log('\n📋 DETALLE POR USUARIO:');
+        console.table(result.data.resultados.map(r => ({
+            Usuario: r.username,
+            Nombre: r.nombre,
+            'Token Insumo': r.detalle.insumo.renovado ? '✅' : '❌',
+            'Razón Insumo': r.detalle.insumo.razon,
+            'Token Pap.Ord': r.detalle.papeleria_ordinario.renovado ? '✅' : '❌',
+            'Razón Pap.Ord': r.detalle.papeleria_ordinario.razon,
+            'Token Pap.Ext': r.detalle.papeleria_extraordinario.renovado ? '✅' : '❌',
+            'Razón Pap.Ext': r.detalle.papeleria_extraordinario.razon
+        })));
+
+        alert(mensaje);
+        return true;
+
+    } catch (error) {
+        console.error('Error en proceso mensual:', error);
+        alert('❌ Error en el proceso: ' + error.message);
+        return false;
+    }
+}
+
+window.ejecutarProcesoMensual = async function () {
+    const confirmar = confirm(
+        '🔄 PROCESO DE RENOVACIÓN MENSUAL\n\n' +
+        '⚠️ REGLA IMPORTANTE:\n' +
+        'TODOS los tokens (insumos y papelería) solo se renovarán\n' +
+        'si el usuario marcó "recibido" en sus solicitudes del mes anterior.\n\n' +
+        '¿Deseas continuar?'
+    );
+    
+    if (!confirmar) return;
+
+    const resultado = await procesarRenovacionMensual();
+    if (resultado) {
+        showNotification('Proceso de renovación mensual completado exitosamente', 'success');
+        setTimeout(() => window.location.reload(), 4000);
+    } else {
+        showNotification('Error en el proceso de renovación mensual', 'error');
+    }
+};
+
+
 // ===================================
 // NOTIFICACIONES
 // ===================================

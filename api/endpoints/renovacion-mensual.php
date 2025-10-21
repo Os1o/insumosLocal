@@ -41,13 +41,14 @@ try {
 /**
  * Ejecutar el proceso completo de renovación mensual
  */
+/**
+ * Ejecutar el proceso completo de renovación mensual
+ */
 function handleEjecutarProceso($conn)
 {
     try {
-        // Iniciar transacción
         $conn->beginTransaction();
 
-        // Calcular fechas del mes anterior
         $fechaActual = new DateTime();
         $mesAnterior = new DateTime();
         $mesAnterior->modify('first day of last month');
@@ -62,9 +63,9 @@ function handleEjecutarProceso($conn)
 
         logError("Proceso mensual - Rango: $inicioMes a $finMes");
 
-        // Obtener todos los usuarios activos
         $stmt = $conn->prepare("
-            SELECT id, username, token_disponible, token_papeleria_ordinario, token_papeleria_extraordinario
+            SELECT id, username, nombre, token_disponible, 
+                   token_papeleria_ordinario, token_papeleria_extraordinario
             FROM usuarios
             WHERE activo = true
         ");
@@ -72,6 +73,15 @@ function handleEjecutarProceso($conn)
         $usuarios = $stmt->fetchAll();
 
         $resultados = [];
+        $estadisticas = [
+            'total_usuarios' => count($usuarios),
+            'insumos_renovados' => 0,
+            'insumos_no_renovados' => 0,
+            'papeleria_ord_renovados' => 0,
+            'papeleria_ord_no_renovados' => 0,
+            'papeleria_ext_renovados' => 0,
+            'papeleria_ext_no_renovados' => 0
+        ];
 
         foreach ($usuarios as $usuario) {
             $resultado = procesarTokenUsuario(
@@ -81,16 +91,51 @@ function handleEjecutarProceso($conn)
                 $finMes,
                 $mesAno
             );
+            
+            $resultado['username'] = $usuario['username'];
+            $resultado['nombre'] = $usuario['nombre'];
+            
+            // Actualizar estadísticas
+            if ($resultado['renovaciones']['insumo']) {
+                $estadisticas['insumos_renovados']++;
+            } else {
+                $estadisticas['insumos_no_renovados']++;
+            }
+            
+            if ($resultado['renovaciones']['papeleria_ordinario']) {
+                $estadisticas['papeleria_ord_renovados']++;
+            } else {
+                $estadisticas['papeleria_ord_no_renovados']++;
+            }
+            
+            if ($resultado['renovaciones']['papeleria_extraordinario']) {
+                $estadisticas['papeleria_ext_renovados']++;
+            } else {
+                $estadisticas['papeleria_ext_no_renovados']++;
+            }
+            
             $resultados[] = $resultado;
         }
 
-        // Commit
         $conn->commit();
+
+        // Generar advertencias
+        $advertencias = [];
+        if ($estadisticas['insumos_no_renovados'] > 0) {
+            $advertencias[] = "{$estadisticas['insumos_no_renovados']} usuarios NO recuperaron token de INSUMOS (no marcaron recibido)";
+        }
+        if ($estadisticas['papeleria_ord_no_renovados'] > 0) {
+            $advertencias[] = "{$estadisticas['papeleria_ord_no_renovados']} usuarios NO recuperaron token de PAPELERÍA ORDINARIA (no marcaron recibido)";
+        }
+        if ($estadisticas['papeleria_ext_no_renovados'] > 0) {
+            $advertencias[] = "{$estadisticas['papeleria_ext_no_renovados']} usuarios NO recuperaron token de PAPELERÍA EXTRAORDINARIA (no marcaron recibido)";
+        }
 
         sendResponse(true, [
             'message' => 'Proceso de renovación mensual completado',
-            'usuarios_procesados' => count($usuarios),
-            'resultados' => $resultados
+            'estadisticas' => $estadisticas,
+            'resultados' => $resultados,
+            'advertencias' => $advertencias
         ]);
     } catch (Exception $e) {
         if ($conn->inTransaction()) {
@@ -104,17 +149,25 @@ function handleEjecutarProceso($conn)
 /**
  * Procesar tokens de un usuario específico
  */
+
+/**
+ * Procesar tokens de un usuario específico
+ * TODOS LOS TOKENS se renuevan SOLO si marcó recibido (o no usó el token)
+ */
 function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
 {
     try {
+        logError("\n═══ PROCESANDO USUARIO: $usuarioId ═══");
+        
         // Buscar solicitudes del mes anterior que usaron token
         $stmt = $conn->prepare("
-            SELECT id, fecha_solicitud, token_usado, recurso_tipo, token_tipo_usado
+            SELECT id, fecha_solicitud, token_usado, recurso_tipo, token_tipo_usado, estado
             FROM solicitudes
             WHERE usuario_id = :usuario_id
             AND token_usado = true
             AND fecha_solicitud >= :inicio
             AND fecha_solicitud <= :fin
+            AND estado = 'cerrado'
         ");
 
         $stmt->execute([
@@ -123,7 +176,9 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
             'fin' => $finMes
         ]);
 
-        $solicitudesToken = $stmt->fetchAll();
+        $solicitudesToken = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        logError("Total solicitudes con token: " . count($solicitudesToken));
 
         // Separar por tipo
         $solicitudesInsumo = array_filter($solicitudesToken, function ($s) {
@@ -141,9 +196,14 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
                 && $s['token_tipo_usado'] === 'extraordinario';
         });
 
+        logError("- Insumos ordinario: " . count($solicitudesInsumo) . " solicitudes");
+        logError("- Papelería ordinario: " . count($solicitudesPapeleriaOrd) . " solicitudes");
+        logError("- Papelería extraordinario: " . count($solicitudesPapeleriaExt) . " solicitudes");
+
         // Verificar renovación para cada tipo
         $renovaciones = [];
 
+        logError("\n--- Verificando INSUMOS ---");
         $renovaciones['insumo'] = verificarRenovacionToken(
             $conn,
             $usuarioId,
@@ -153,6 +213,7 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
             $mesAno
         );
 
+        logError("\n--- Verificando PAPELERÍA ORDINARIA ---");
         $renovaciones['papeleria_ordinario'] = verificarRenovacionToken(
             $conn,
             $usuarioId,
@@ -162,6 +223,7 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
             $mesAno
         );
 
+        logError("\n--- Verificando PAPELERÍA EXTRAORDINARIA ---");
         $renovaciones['papeleria_extraordinario'] = verificarRenovacionToken(
             $conn,
             $usuarioId,
@@ -171,8 +233,7 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
             $mesAno
         );
 
-        // Actualizar tokens del usuario
-        $updateData = [];
+        // Actualizar tokens SOLO si la verificación fue exitosa
         $setClauses = [];
 
         if ($renovaciones['insumo']) {
@@ -185,16 +246,43 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
             $setClauses[] = "token_papeleria_extraordinario = 1";
         }
 
+        // Solo actualizar si hay tokens para renovar
         if (!empty($setClauses)) {
             $sql = "UPDATE usuarios SET " . implode(', ', $setClauses) . " WHERE id = :id";
             $stmtUpdate = $conn->prepare($sql);
             $stmtUpdate->execute(['id' => $usuarioId]);
+            
+            logError("\n✅ Tokens actualizados en BD: " . implode(', ', $setClauses));
+        } else {
+            logError("\n⚠️ No se actualizaron tokens (ninguno cumplió requisitos)");
         }
+        
+        logError("═══ FIN PROCESAMIENTO USUARIO ═══\n");
 
         return [
             'usuario_id' => $usuarioId,
             'renovaciones' => $renovaciones,
-            'tokens_renovados' => count(array_filter($renovaciones))
+            'tokens_renovados' => count(array_filter($renovaciones)),
+            'detalle' => [
+                'insumo' => [
+                    'renovado' => $renovaciones['insumo'],
+                    'razon' => $renovaciones['insumo'] 
+                        ? (count($solicitudesInsumo) > 0 ? 'Marcó recibido' : 'No usó token')
+                        : 'NO marcó recibido'
+                ],
+                'papeleria_ordinario' => [
+                    'renovado' => $renovaciones['papeleria_ordinario'],
+                    'razon' => $renovaciones['papeleria_ordinario'] 
+                        ? (count($solicitudesPapeleriaOrd) > 0 ? 'Marcó recibido' : 'No usó token')
+                        : 'NO marcó recibido'
+                ],
+                'papeleria_extraordinario' => [
+                    'renovado' => $renovaciones['papeleria_extraordinario'],
+                    'razon' => $renovaciones['papeleria_extraordinario'] 
+                        ? (count($solicitudesPapeleriaExt) > 0 ? 'Marcó recibido' : 'No usó token')
+                        : 'NO marcó recibido'
+                ]
+            ]
         ];
     } catch (Exception $e) {
         logError("Error procesando usuario $usuarioId: " . $e->getMessage());
@@ -204,16 +292,30 @@ function procesarTokenUsuario($conn, $usuarioId, $inicioMes, $finMes, $mesAno)
 
 /**
  * Verificar si se debe renovar un token específico
+ * REGLA: Solo renueva si NO hay solicitudes pendientes O si todas están marcadas como recibidas
+ */
+/**
+ * Verificar si se debe renovar un token específico
+ * CORREGIDO: Maneja correctamente la tabla solicitudes_recibidos con ID integer
+ */
+/**
+ * Verificar si se debe renovar un token específico
+ * LÓGICA CORREGIDA:
+ * - Si NO usó el token → Renovar automáticamente
+ * - Si SÍ usó el token Y marcó recibido → Renovar
+ * - Si SÍ usó el token pero NO marcó recibido → NO renovar
  */
 function verificarRenovacionToken($conn, $usuarioId, $solicitudes, $recursoTipo, $tokenTipo, $mesAno)
 {
     try {
-        $tokenRenovado = true;
         $teniaSolicitud = count($solicitudes) > 0;
-
+        $marcoRecibido = false;
+        $tokenRenovado = true;
+        
         if ($teniaSolicitud) {
+            $todasMarcadas = true;
+            
             foreach ($solicitudes as $solicitud) {
-                // Verificar si marcó como recibido
                 $stmt = $conn->prepare("
                     SELECT id, fecha_marcado_recibido
                     FROM solicitudes_recibidos
@@ -226,17 +328,32 @@ function verificarRenovacionToken($conn, $usuarioId, $solicitudes, $recursoTipo,
                     'usuario_id' => $usuarioId
                 ]);
 
-                $recibido = $stmt->fetch();
+                $recibido = $stmt->fetch(PDO::FETCH_ASSOC);
 
-                if (!$recibido) {
-                    // No marcó como recibido - NO renovar
-                    $tokenRenovado = false;
+                if (!$recibido || $recibido['fecha_marcado_recibido'] === null) {
+                    $todasMarcadas = false;
+                    logError("❌ Usuario $usuarioId - Solicitud {$solicitud['id']} ($recursoTipo - $tokenTipo) NO marcada");
                     break;
+                } else {
+                    logError("✅ Usuario $usuarioId - Solicitud {$solicitud['id']} ($recursoTipo - $tokenTipo) SÍ marcada");
                 }
             }
+            
+            if ($todasMarcadas) {
+                $tokenRenovado = true;
+                $marcoRecibido = true;
+            } else {
+                $tokenRenovado = false;
+                $marcoRecibido = false;
+            }
+            
+        } else {
+            logError("✅ Usuario $usuarioId - NO usó token de $recursoTipo - $tokenTipo → Renovar");
+            $tokenRenovado = true;
+            $marcoRecibido = false;
         }
 
-        // Registrar en tokens_renovacion
+        // Registrar en tokens_renovacion con tipos correctos
         $stmtToken = $conn->prepare("
             INSERT INTO tokens_renovacion (
                 usuario_id,
@@ -265,19 +382,25 @@ function verificarRenovacionToken($conn, $usuarioId, $solicitudes, $recursoTipo,
                 fecha_verificacion = EXCLUDED.fecha_verificacion
         ");
 
+        // Convertir a enteros para PostgreSQL (más compatible)
         $stmtToken->execute([
             'usuario_id' => $usuarioId,
             'mes_ano' => $mesAno,
             'recurso_tipo' => $recursoTipo,
             'token_tipo' => $tokenTipo,
-            'tenia_solicitud' => (int)$teniaSolicitud,
-            'marco_recibido' => (int)$tokenRenovado,
-            'token_renovado' => (int)$tokenRenovado
+            'tenia_solicitud' => $teniaSolicitud ? 1 : 0,
+            'marco_recibido' => $marcoRecibido ? 1 : 0,
+            'token_renovado' => $tokenRenovado ? 1 : 0
         ]);
 
+        $status = $tokenRenovado ? '✅ RENOVADO' : '❌ NO RENOVADO';
+        logError("RESULTADO: $recursoTipo $tokenTipo: $status");
+
         return $tokenRenovado;
+        
     } catch (Exception $e) {
         logError("Error en verificarRenovacionToken: " . $e->getMessage());
         throw $e;
     }
 }
+

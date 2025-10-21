@@ -354,39 +354,70 @@ function handleToggleEstado($conn, $requestData) {
 /**
  * Resetear tokens de usuario (SOLO SUPER_ADMIN)
  */
+/**
+ * Resetear tokens de usuario (SOLO SUPER_ADMIN)
+ * MODIFICADO: Ahora verifica si marcó "recibido" antes de renovar token de insumos
+ */
 function handleResetToken($conn, $requestData) {
     try {
         $usuarioId = $requestData['usuario_id'] ?? null;
         $tipoToken = $requestData['tipo_token'] ?? 'todos';
+        $forzarRenovacion = $requestData['forzar'] ?? false; // Nuevo parámetro
         
         if (!$usuarioId) {
             sendResponse(false, null, 'Usuario ID requerido', 400);
         }
         
-        // Determinar qué actualizar
-        $updateFields = [];
+        // Determinar qué tokens actualizar
+        $tokensARenovar = [];
         
         switch ($tipoToken) {
             case 'todos':
-                $updateFields = [
-                    'token_disponible = 1',
-                    'token_papeleria_ordinario = 1',
-                    'token_papeleria_extraordinario = 1'
-                ];
+                $tokensARenovar = ['insumo', 'papeleria_ordinario', 'papeleria_extraordinario'];
                 break;
             case 'insumo':
-                $updateFields = ['token_disponible = 1'];
+                $tokensARenovar = ['insumo'];
                 break;
             case 'papeleria_ordinario':
-                $updateFields = ['token_papeleria_ordinario = 1'];
+                $tokensARenovar = ['papeleria_ordinario'];
                 break;
             case 'papeleria_extraordinario':
-                $updateFields = ['token_papeleria_extraordinario = 1'];
+                $tokensARenovar = ['papeleria_extraordinario'];
                 break;
             default:
                 sendResponse(false, null, 'Tipo de token inválido', 400);
         }
         
+        $updateFields = [];
+        $mensajesAdvertencia = [];
+        
+        foreach ($tokensARenovar as $token) {
+            if ($token === 'insumo' && !$forzarRenovacion) {
+                // ⚠️ VERIFICAR SI MARCÓ RECIBIDO ANTES DE RENOVAR
+                $puedeRenovar = verificarPuedeRenovarInsumo($conn, $usuarioId);
+                
+                if ($puedeRenovar['puede_renovar']) {
+                    $updateFields[] = 'token_disponible = 1';
+                } else {
+                    $mensajesAdvertencia[] = $puedeRenovar['mensaje'];
+                }
+            } else {
+                // Tokens de papelería o renovación forzada
+                if ($token === 'insumo') {
+                    $updateFields[] = 'token_disponible = 1';
+                } elseif ($token === 'papeleria_ordinario') {
+                    $updateFields[] = 'token_papeleria_ordinario = 1';
+                } elseif ($token === 'papeleria_extraordinario') {
+                    $updateFields[] = 'token_papeleria_extraordinario = 1';
+                }
+            }
+        }
+        
+        if (empty($updateFields)) {
+            sendResponse(false, null, implode('. ', $mensajesAdvertencia), 400);
+        }
+        
+        // Actualizar tokens
         $sql = "
             UPDATE usuarios 
             SET " . implode(', ', $updateFields) . ", updated_at = NOW()
@@ -403,11 +434,87 @@ function handleResetToken($conn, $requestData) {
         }
         
         unset($usuario['password_hash']);
-        sendResponse(true, $usuario);
+        
+        $response = [
+            'usuario' => $usuario,
+            'tokens_renovados' => count($updateFields)
+        ];
+        
+        if (!empty($mensajesAdvertencia)) {
+            $response['advertencias'] = $mensajesAdvertencia;
+        }
+        
+        sendResponse(true, $response);
         
     } catch(Exception $e) {
         logError('Error en handleResetToken: ' . $e->getMessage());
         throw $e;
+    }
+}
+
+/**
+ * Verificar si un usuario puede renovar su token de insumos
+ * Retorna true solo si no tiene solicitudes pendientes o si marcó todas como recibidas
+ */
+function verificarPuedeRenovarInsumo($conn, $usuarioId) {
+    try {
+        // Buscar la última solicitud ordinaria de insumos cerrada
+        $stmt = $conn->prepare("
+            SELECT s.id, s.fecha_solicitud
+            FROM solicitudes s
+            WHERE s.usuario_id = :usuario_id
+            AND s.tipo = 'ordinaria'
+            AND (s.recurso_tipo = 'insumo' OR s.recurso_tipo IS NULL)
+            AND s.estado = 'cerrado'
+            AND s.token_usado = true
+            ORDER BY s.fecha_solicitud DESC
+            LIMIT 1
+        ");
+        
+        $stmt->execute(['usuario_id' => $usuarioId]);
+        $ultimaSolicitud = $stmt->fetch();
+        
+        if (!$ultimaSolicitud) {
+            // No tiene solicitudes pendientes, puede renovar
+            return [
+                'puede_renovar' => true,
+                'mensaje' => 'No tiene solicitudes pendientes'
+            ];
+        }
+        
+        // Verificar si marcó como recibido
+        $stmtRecibido = $conn->prepare("
+            SELECT id, fecha_marcado_recibido
+            FROM solicitudes_recibidos
+            WHERE solicitud_id = :solicitud_id
+            AND usuario_id = :usuario_id
+        ");
+        
+        $stmtRecibido->execute([
+            'solicitud_id' => $ultimaSolicitud['id'],
+            'usuario_id' => $usuarioId
+        ]);
+        
+        $recibido = $stmtRecibido->fetch();
+        
+        if ($recibido && $recibido['fecha_marcado_recibido']) {
+            return [
+                'puede_renovar' => true,
+                'mensaje' => 'Usuario marcó recibido su última solicitud'
+            ];
+        } else {
+            return [
+                'puede_renovar' => false,
+                'mensaje' => 'Usuario NO ha marcado como recibida su última solicitud. Debe marcarla primero o usar renovación forzada'
+            ];
+        }
+        
+    } catch (Exception $e) {
+        logError('Error en verificarPuedeRenovarInsumo: ' . $e->getMessage());
+        return [
+            'puede_renovar' => false,
+            'mensaje' => 'Error al verificar estado: ' . $e->getMessage()
+        ];
     }
 }
 

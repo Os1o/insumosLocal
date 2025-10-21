@@ -89,6 +89,14 @@
                 </button>
             </form>
 
+            <!-- ⭐ NUEVO: Botón del tutorial -->
+            <div class="login-help">
+                <button type="button" class="btn-tutorial" onclick="abrirTutorial()">
+                    <span class="icon">🎥</span>
+                    ¿Primera vez? Ver tutorial
+                </button>
+            </div>
+
             <!-- Mensajes de error/success -->
             <div id="messageContainer" class="message-container" style="display: none;">
                 <div class="message-content">
@@ -108,9 +116,301 @@
         </div>
     </div>
 
+
+    <!-- ⭐ Modal del tutorial - DISEÑO SIMPLE Y LIMPIO -->
+    <div id="tutorial-modal" class="tutorial-modal">
+        <div class="tutorial-backdrop"></div>
+        <div class="tutorial-container">
+            <div class="tutorial-header">
+                <h3>📚 Tutorial del Sistema</h3>
+                <button class="tutorial-close" onclick="cerrarTutorial()" title="Cerrar">×</button>
+            </div>
+            <div class="tutorial-content">
+                <div class="video-player">
+                    <video id="tutorial-video" controls>
+                        <source src="image/Proyecto de vídeo Insumos.mp4" type="video/mp4">
+                        Tu navegador no soporta videos.
+                    </video>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Scripts -->
     <script src="js/api-adapter.js"></script>
     <script src="js/login.js"></script>
+
+    <!-- ⭐ NUEVO: Script para el modal del tutorial -->
+    <!-- ⭐ Script para el modal del tutorial - VERSIÓN CORRECTA -->
+    <script>
+        // Funciones del tutorial
+        function abrirTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const video = document.getElementById('tutorial-video');
+
+            if (modal) {
+                modal.classList.add('active');
+                document.body.style.overflow = 'hidden';
+
+                // Intentar reproducir el video
+                if (video) {
+                    video.currentTime = 0;
+                    setTimeout(() => {
+                        video.play().catch(() => {
+                            console.log('Autoplay bloqueado');
+                        });
+                    }, 100);
+                }
+            }
+        }
+
+        function cerrarTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            const video = document.getElementById('tutorial-video');
+
+            if (modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+
+                // Pausar video
+                if (video) {
+                    video.pause();
+                    video.currentTime = 0;
+                }
+            }
+        }
+
+        // Cerrar al hacer clic en el fondo
+        document.addEventListener('click', function (e) {
+            const modal = document.getElementById('tutorial-modal');
+            if (e.target.classList.contains('tutorial-backdrop')) {
+                cerrarTutorial();
+            }
+        });
+
+        // Cerrar con ESC
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('tutorial-modal');
+                if (modal && modal.classList.contains('active')) {
+                    cerrarTutorial();
+                }
+            }
+        });
+
+        // Asegurar que el modal esté oculto al cargar
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('tutorial-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                modal.style.display = 'none';
+                // Mostrarlo solo cuando tenga la clase active
+                const observer = new MutationObserver(function (mutations) {
+                    mutations.forEach(function (mutation) {
+                        if (mutation.attributeName === 'class') {
+                            if (modal.classList.contains('active')) {
+                                modal.style.display = 'flex';
+                            } else {
+                                setTimeout(() => {
+                                    if (!modal.classList.contains('active')) {
+                                        modal.style.display = 'none';
+                                    }
+                                }, 300);
+                            }
+                        }
+                    });
+                });
+                observer.observe(modal, { attributes: true });
+            }
+        });
+    </script>
+
+    <style>
+        /* ===================================
+   BOTÓN DE TUTORIAL
+   =================================== */
+
+        .login-help {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .btn-tutorial {
+            background: #00675B;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-tutorial:hover {
+            background: #0d4f47;
+            transform: translateY(-1px);
+        }
+
+        .btn-tutorial .icon {
+            font-size: 1.1rem;
+        }
+
+        /* ===================================
+   MODAL DEL TUTORIAL - SIMPLE Y LIMPIO
+   =================================== */
+
+        .tutorial-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 999999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .tutorial-modal.active {
+            display: flex;
+        }
+
+        .tutorial-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .tutorial-container {
+            position: relative;
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+            z-index: 1000000;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tutorial-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            background: #f9fafb;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .tutorial-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .tutorial-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            line-height: 1;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .tutorial-close:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+
+        .tutorial-content {
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .video-player {
+            position: relative;
+            background: #000;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+        }
+
+        .video-player video {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tutorial-modal {
+                padding: 10px;
+            }
+
+            .tutorial-container {
+                max-width: 100%;
+                max-height: 95vh;
+            }
+
+            .tutorial-header {
+                padding: 1rem 1.25rem;
+            }
+
+            .tutorial-header h3 {
+                font-size: 1.1rem;
+            }
+
+            .btn-tutorial {
+                font-size: 0.85rem;
+                padding: 0.65rem 1.25rem;
+            }
+        }
+    </style>
 </body>
 
 </html>
