@@ -634,10 +634,17 @@ function crearModalFormularioUsuario() {
                                 <option value="">Seleccionar departamento...</option>
                                 <option value="Dirección Jurídica">Dirección Jurídica</option>
                                 <option value="Coordinación Administrativa">Coordinación Administrativa</option>
-                                <option value="Coordinación de Sistemas">Coordinación de Sistemas</option>
-                                <option value="Administración General">Administración General</option>
-                                <option value="Recursos Humanos">Recursos Humanos</option>
-                                <option value="Contabilidad">Contabilidad</option>
+                                <option value="Unidad de investigaciones y Procesos Jurídicos">Unidad de investigaciones y Procesos Jurídicos</option>
+                                <option value="Unidad de Asuntos Consultivos y de Atención a Órganos">Unidad de Asuntos Consultivos y de Atención a Órganos</option>
+                                <option value="Unidad de Derechos Humanos">Unidad de Derechos Humanos</option>
+                                <option value="Coordinación laboral">Coordinación laboral</option>
+                                <option value="Coordinación de Asuntos Contenciosos">Coordinación de Asuntos Contenciosos</option>
+                                <option value="Coordinación de Investigación y Asuntos de Defraudación">Coordinación de Investigación y Asuntos de Defraudación</option>
+                                <option value="Coordinación de Evaluación de Procesos Jurídicos">Coordinación de Evaluación de Procesos Jurídicos</option>
+                                <option value="Coordinación de Legislación y Consulta">Coordinación de Legislación y Consulta</option>
+                                <option value="Coordinación de Atención a Órganos Fiscalizadores">Coordinación de Atención a Órganos Fiscalizadores</option>
+                                <option value="Coordinación de Atención a Quejas y Casos Especiales">Coordinación de Atención a Quejas y Casos Especiales</option>
+                                <option value="Coordinación de Igualdad, Género e Inclusión">Coordinación de Igualdad, Género e Inclusión</option>
                                 <option value="Otro">Otro</option>
                             </select>
                         </div>
